@@ -6,11 +6,15 @@ cgitb.enable()
 import traceback
 
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(name)-24s %(levelname)-8s %(message)s',
-                    filename='web2fb2.log',
-                    filemode='w')
-log = logging.getLogger('web2fb2.web')
+import logging.handlers
+
+#настраиваем главный логгер
+handler = logging.handlers.RotatingFileHandler('web2fb2.log', maxBytes = 1000000, backupCount = 1)
+handler.setFormatter(logging.Formatter('%(asctime)s %(name)-24s %(levelname)-8s %(message)s'))
+log = logging.root
+log.addHandler(handler)
+log.setLevel(logging.DEBUG)
+
 import process
 
 def draw_header():
@@ -92,9 +96,10 @@ def main():
 	else:
 		log.info('We get url: %s' % url)
 
+		#запускаем сам процесс, перехватываем все неперехваченые ошибки в лог
 		log.debug('url: %s Start process' % url)
 		try:
-			rez = process.process().web(url)
+			rez = process.process().do_web(url)
 		except:
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 			print draw_error('Internal error')

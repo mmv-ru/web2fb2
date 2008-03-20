@@ -1,9 +1,6 @@
 #!/usr/bin/python
 #coding=utf-8
 
-import logging
-log = logging.getLogger('web2fb2.img_download')
-
 import urllib2
 import socket
 import os
@@ -11,7 +8,7 @@ import os
 модуль скачки файлов (картинок)
 '''
 
-def download(files_list, folder):
+def download(files_list, folder, log):
 	'''
 	входные параметры:
 		files_list - словарь {url: file_name}....}
