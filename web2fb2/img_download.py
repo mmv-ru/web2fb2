@@ -1,8 +1,12 @@
 #!/usr/bin/python
 #coding=utf-8
 
+import logging
+log = logging.getLogger('web2fb2.img_download')
+
 import urllib2
 import socket
+import os
 '''
 модуль скачки файлов (картинок)
 '''
@@ -16,27 +20,27 @@ def download(files_list, folder):
 		словарь {url: реузльтат}....}
 			где результат: 0 - если не получилось, 1- если получилось
 	'''
+	log.debug('%s images for download' % len(files_list))
 	rez = {}
 	
 	socket.setdefaulttimeout(20)
 	opener = urllib2.build_opener()
 
 	for url, file_name in files_list.items():
+		log.debug('Download image: %s into: %s' % (url, file_name))
 		try:
 			request = urllib2.Request(url, None, {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8"})
 			handle = opener.open(request)
 			data = handle.read()
 			handle.close()
 		except (urllib2.HTTPError, urllib2.URLError, IOError, ValueError), er:
+			log.warning('Downloading image: %s error: %s' % (url, er))
 			rez[url] = 0
 		else:
-			try:
-				file(folder + '/' + file_name, 'wb').write(data)
-			except:
-				rez[url] = 0
-			else:
-				rez[url] = 1
+			file(os.path.join(folder, file_name), 'wb').write(data)
+			rez[url] = 1
 
+	log.info('Downloaded %s images from %s' % (len(rez), len(files_list))) 
 	return rez
 
 if __name__ == '__main__':
