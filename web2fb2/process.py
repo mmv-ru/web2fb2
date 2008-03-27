@@ -22,7 +22,7 @@ import img_download
 
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
 TEMP_PATH = "temp" #папка для временных файлов
-CLEAN_TIME = 600 #время, через которое будут удалятся старые ебуки
+CLEAN_TIME = 900 #время, через которое будут удалятся старые ебуки
 LOGZ_PATH = 'logz' #папка где будут логи лежать
 
 #http://python.com.ua/ru/news/2006/04/20/zaschita-ot-duraka-v-programmah-na-yazyike-python/
@@ -34,18 +34,20 @@ def clean_up():
 	'''
 	удаляем мусор, старые файлы
 	'''
+	#удаляем старые папки с книжками
 	for dir in os.listdir(EBOOKZ_PATH):
 		if time.time() - os.path.getmtime(os.path.join(EBOOKZ_PATH, dir)) > CLEAN_TIME:
 			log.debug('Clearning up %s' % os.path.join(EBOOKZ_PATH, dir))
 			shutil.rmtree(os.path.join(EBOOKZ_PATH, dir))
-					
+			
+	#удаляем временные файлы
 	for dir in os.listdir(TEMP_PATH):
 		if time.time() - os.path.getmtime(os.path.join(TEMP_PATH, dir)) > CLEAN_TIME:
 			log.debug('Clearning up %s' % os.path.join(TEMP_PATH, dir))
 			shutil.rmtree(os.path.join(TEMP_PATH, dir))
 			
 class process:
-	def do_web(self, url):
+	def do_web(self, url, is_img, descr = None):
 		#настраиваем логгер, чтоб логи сыпались в еще одно место (отдельный файл)
 		log_file_name = urlparse.urlparse(url)[1][:48] + '_' + md5.new(url).hexdigest()[:10] + '.log'
 		
@@ -60,7 +62,7 @@ class process:
 		
 		#перехватываем все ошибки в лог
 		try:
-			rez = self.web(url)
+			rez = self.web(url, is_img, descr)
 		except:
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 			return (0, 'Internal error')
@@ -68,7 +70,9 @@ class process:
 			return rez
 
 
-	def web(self, url):
+	def web(self, url, is_img, descr = None):
+		
+		start_time = time.time() #засекаем время
 		
 		#проверяем урл
 		log.debug('Checking url')
@@ -76,73 +80,131 @@ class process:
 			log.warning('Bad url')
 			return (0, bad_url)
 		
-		log.info('Url downloading')
+		#генерируем имя для папок и файлов
+		#имя временной папки генерится на основе урла и того - с картинкаи он или без
+		#это нужно для кеширования
+		source_folder_name = md5.new(url + str(is_img)).hexdigest()[:10]
+		#имя папки с результатом - случайное
+		#ибо если кто-то поменяет дескпишн - мы fb2 сгенерим его в новую папку
+		ebookz_folder_name = md5.new(str(random.random())).hexdigest()[:10]
 		
-		#попытка скачать html
-		log.debug('Start url downloading')
-		try:
-			data, real_url = self.download_html(url)
-		except (urllib2.HTTPError, urllib2.URLError, IOError, ValueError), er:
-			log.warning('Download error %s' % (er))
-			return (0, er)
-		log.debug('End of url downloading')
-		log.info('Real download url is: %s ' % (real_url))
-		
-		#генерируем имя для временной папки
-		folder_name = md5.new(url + str(random.random())).hexdigest()[:10]
-		log.debug('Generated folder name: %s' % (folder_name))
-		
-		source_folder = os.path.join(TEMP_PATH, folder_name)
-		
-		result_folder = os.path.join(EBOOKZ_PATH, folder_name)
+		log.debug('Generated source folder name: %s' % (source_folder_name))
+		log.debug('Generated ebookz folder name: %s' % (ebookz_folder_name))
+				
+		source_folder = os.path.join(TEMP_PATH, source_folder_name)
+				
+		result_folder = os.path.join(EBOOKZ_PATH, ebookz_folder_name)
+
+		source_file_name = '__ebook.html'
 		
 		#генерируем имя для получившегося файла
 		file_name = urlparse.urlparse(url)[1][:48] + '.fb2'
 		log.debug('Generated file name: %s' % (file_name))
 		
-		#создаем временную папку
-		log.debug('Create temp folder: %s' % (source_folder))
-		os.mkdir(source_folder)
+		try:
+			log.debug('Try to set  new time for %s' % os.path.join(source_folder, file_name))
+			os.utime(os.path.join(source_folder), None) #пытаемся перевести время модификации папки, чтоб ее не удалили при подчистке
+		except OSError, er:
+			log.debug('Cant set new time')
+			if er.errno != 2:
+				raise er
 		
-		#чистка html, получение списка картинок
-		log.debug('Start processing html')
-		data, imgs_list = process_html().do(data, source_folder, url)
-		log.debug('End of processing html')
+		#НАДО ВМЕСТО ЭТОЙ ЗАДЕРЖКИ ПОДУМАТЬ О ЛОКАХ
+		#делаем небольшую задержку, чтоб папку успели удалить при подчистке
+		#на случай, если при подчистке после опеределения времени папки, не успели ее удалить
+		time.sleep(0.2)
 		
-		#качаем картинки
-		log.debug('Start image downloading')
-		img_download.download(imgs_list, source_folder, log)
-		log.debug('End of image downloading')
+		#пытаемся создать временную папку. если она уже есть - значит файл уже есть и скачивать не надо.
+		try:
+			log.debug('Create temp folder: %s' % (source_folder))
+			os.mkdir(source_folder) #создаем временную папку
+		except OSError, er:
+			if er.errno != 17:
+				raise er
+			else:
+				log.info('Folder exist')
+		else:
+			#попытка скачать html
+			log.info('Url downloading')
+			log.debug('Start url downloading')
+			try:
+				data, real_url = self.download_html(url)
+			except (urllib2.HTTPError, urllib2.URLError, IOError, ValueError), er:
+				log.warning('Download error %s' % (er))
+				return (0, er)
+			log.debug('End of url downloading')
+			log.info('Real download url is: %s ' % (real_url))
 		
-		#создаем папку для готовой книги
-		log.debug('Create folder for storing ebook: %s' % (result_folder))
-		os.mkdir(result_folder)
-
+			#чистка html, получение списка картинок
+			log.debug('Start processing html')
+			data, imgs_list = process_html().do(data, source_folder, url, is_img)
+			log.debug('End of processing html')
+		
+			#записываем html в файл
+			log.debug('Writing source file: %s' % os.path.join(source_folder, source_file_name))
+			file(os.path.join(source_folder, source_file_name), 'w').write(data)
+		
+			if is_img:
+				#качаем картинки
+				log.debug('Start image downloading')
+				imgs_down = img_download.download(imgs_list, source_folder, log)
+				log.debug('End of image downloading')
 		
 		#готовим параметры для преобразования html2fb2
+		log.debug('Reading source file: %s' % os.path.join(source_folder, source_file_name))
+		data = file(os.path.join(source_folder, source_file_name)).read()
+		
 		params = h2fb.default_params.copy()
 		params['data'] = data
 		params['verbose'] = 1
 		params['encoding-from'] = 'UTF-8'
 		params['encoding-to'] = 'UTF-8'
 		params['convert-images'] = 1
-		params['skip-images'] = 0
+		#params['file-name'] = os.path.join(source_folder, file_name)
+		if is_img:
+			params['skip-images'] = 0
+			
+		if descr:
+			log.info('Set descr')
+			title = descr.get('title', None)
+			author_first = descr.get('author_first', None)
+			author_middle = descr.get('author_middle', None)
+			author_last = descr.get('author_last', None)
+			
+			if title != None: params['title'] = title
+			if author_first != None: params['author-first'] = author_first
+			if author_middle != None: params['author-middle'] = author_middle
+			if author_last != None: params['author-last'] = author_last
+				
 		params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
 		
 		#собственно преобразование
 		log.debug('Start h2fb process')
-		out_data = h2fb.MyHTMLParser().process(params)
+		mp = h2fb.MyHTMLParser()
+		out_data = mp.process(params)
+		descr = mp.get_descr()
 		log.debug('End of h2fb process')
+		
+		#создаем папку для готовой книги
+		os.mkdir(result_folder)
 		
 		#записываем книгу
 		log.debug('Writing ebook: %s into: %s (ebook len: %s)' % (file_name, result_folder, len(out_data)))
 		file(os.path.join(result_folder, file_name), 'w').write(out_data)
-		
-		#удаляем временную папку
-		log.debug('Removing temp folder: %s' % (source_folder))
-		shutil.rmtree(source_folder)
 
-		return (1, os.path.join(result_folder, file_name), file_name)
+		#формируем отчет
+		stat = {
+			'file_size': os.path.getsize(os.path.join(result_folder, file_name)),    # размер файла в байтах
+			'work_time': time.time() - start_time, #размер книги в килобайтах
+			'url': url, #изначальный урл
+			'path_with_file': os.path.join(result_folder, file_name),
+			'file_name': file_name, 
+			'img': is_img
+		}
+			
+		stat.update(descr) #добавляем в словарь дескрипшн
+
+		return (1, stat)
 	
 	def download_html(self, url):
 		'''
@@ -162,7 +224,7 @@ class process:
 
 class process_html:
 
-	def do(self, data, source_folder, url):
+	def do(self, data, source_folder, url, is_img):
 		'''
 		рабочая функция - вынести в отделный модуль.
 		на входе - строка html, на выходе строка fb2
@@ -173,9 +235,12 @@ class process_html:
 		data = self.recoding(data)
 		log.debug('End of recoding')
 		
-		log.debug('Start process images')
-		data, img_list = self.process_images(data, source_folder, url)
-		log.debug('End of process images')
+		if is_img:
+			log.debug('Start process images')
+			data, img_list = self.process_images(data, source_folder, url)
+			log.debug('End of process images')
+		else:
+			img_list = None
 		
 		return data, img_list
 	

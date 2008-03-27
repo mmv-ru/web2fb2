@@ -25,6 +25,10 @@ Usage: %prog [options] args
     --not-detect-verses:      Not detect verses
     --not-detect-notes:       Not detect notes
     -v,--verbose=INT:         Debug
+    -title:                   Title
+    -author-first:            Author first name
+    -author-middle:           Author middle name
+    -author-last:             Author last name
 """
 
 ####
@@ -313,6 +317,7 @@ class MyHTMLParser(SGMLParser):
         self.descr={}                   # description
         self.bins=[]                    # images (binary objects)
         self.informer=None              # informer (for out messages)
+        self.rez_descr = {'author-first': '', 'author-middle': '', 'author-last': '', 'title': ''}
         
     def handle_charref(self, name):
         """Handle decimal escaped character reference, does not handle hex.
@@ -1191,20 +1196,35 @@ class MyHTMLParser(SGMLParser):
     # --- Make out document methods
     
     def make_description(self):
-        author = 'author' in self.descr and self.descr['author'] or ''
+
         title = 'title' in self.descr and self.descr['title'] or ''
+        author = 'author' in self.descr and self.descr['author'] or ''
         if not author and '.' in title :
             point = title.index('.')
             author = title[:point].strip()
             title = title[point+1:].strip()
-        author = author.split()
-        first_name = author and author[0] or ''
-        middle_name = len(author) > 2 and author[1] or ''
-        last_name = len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
+            author = author.split()
+            first_name = author and author[0] or ''
+            middle_name = len(author) > 2 and author[1] or ''
+            last_name = len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
+
+        if (self.params['author-first'] != None) or (self.params['author-middle'] != None) or (self.params['author-last'] != None):
+            first_name = self.params['author-first']
+            middle_name = self.params['author-middle']
+            last_name = self.params['author-last']
+        if (self.params['title'] != None):
+            title = self.params['title']
+        
         retv='<description><title-info><genre></genre><author><first-name>%s' \
               '</first-name><middle-name>%s' \
               '</middle-name><last-name>%s</last-name></author>'\
               '<book-title>%s</book-title>' % (first_name, middle_name, last_name, title)
+              
+        self.rez_descr['author-first'] = first_name
+        self.rez_descr['author-middle'] = middle_name
+        self.rez_descr['author-last'] = last_name
+        self.rez_descr['title'] = title
+        
         if 'annot' in self.descr:
             retv+='<annotation>%s</annotation>' % self.descr['annot']
         retv+='</title-info><document-info><author><nickname></nickname></author>'\
@@ -1294,6 +1314,9 @@ class MyHTMLParser(SGMLParser):
         if data:
             data=base64.encodestring(data)
         return mime_type, data
+        
+    def get_descr(self):
+        return self.rez_descr
 
 
 def usage():
@@ -1319,6 +1342,10 @@ where options is:
     --not-detect-annot       Not detect annotation
     --not-detect-verses      Not detect verses
     --not-detect-notes       Not detect notes
+    --title                  Title
+    --author-first           Author first name
+    --author-middle          Author middle name
+    --author-last            Author last name
 ''' % version
 
 
@@ -1352,6 +1379,10 @@ default_params = {
     'sys-encoding': sys_encoding,
     'informer': sys.stderr.write,
     'convert-span-to': None, # what to convert span tags to, if set to 'em' or 'emphasis' converts spans to 'emphasis', if 'strong' converts to 'strong', anything else is ignored/skipped/removed (silently)
+    'title': None,
+    'author-first': None,
+    'author-middle': None,
+    'author-last': None,
     }
 
 
@@ -1406,6 +1437,10 @@ def convert_to_fb(opts):
                                         'not-detect-notes',
                                         'not-convert-images',
                                         'not-convert-hyphen',
+                                        'title=',
+                                        'author-first=',
+                                        'author-middle=',
+                                        'author-last='
                                         ]
                                        )
         except getopt.GetoptError:
@@ -1454,12 +1489,22 @@ def convert_to_fb(opts):
             params['convert-hyphen']=0
         elif opt in ('-v','--verbose',):
             params['verbose']=int(val)
+        elif opt in ('--title',):
+            params['title']=str(val)
+        elif opt in ('--author-first',):
+            params['author-first']=str(val)
+        elif opt in ('--author-middle',):
+            params['author-middle']=str(val)
+        elif opt in ('--author-last',):
+            params['author-last']=str(val)
         
     params['data'] = in_file.read()
     in_file.close()
-    data=MyHTMLParser().process(params)
+    mp = MyHTMLParser()
+    data=mp.process(params)
     out_file.write(data)
     out_file.close()
+    #print mp.get_descr()
 
 
 if __name__=='__main__':
