@@ -1,6 +1,6 @@
 #coding=utf-8
 '''
-модуль, для работы с сессиями (как-бы сессиями)
+РјРѕРґСѓР»СЊ, РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ СЃРµСЃСЃРёСЏРјРё (РєР°Рє-Р±С‹ СЃРµСЃСЃРёСЏРјРё)
 '''
 
 import random
@@ -10,48 +10,48 @@ import time
 
 class session:
 	def __init__(self):
-		self.SEESION_DIR = 'sess' #путь к сессиям
-		self.MAX_SESSIONS = 1 #максимальное количество сессий
-		self.CLEAN_TIME = 600 #время через которое сессии будут удалятся
+		self.SEESION_DIR = 'sess' #РїСѓС‚СЊ Рє СЃРµСЃСЃРёСЏРј
+		self.MAX_SESSIONS = 2 #РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРµСЃСЃРёР№
+		self.CLEAN_TIME = 600 #РІСЂРµРјСЏ С‡РµСЂРµР· РєРѕС‚РѕСЂРѕРµ СЃРµСЃСЃРёРё Р±СѓРґСѓС‚ СѓРґР°Р»СЏС‚СЃСЏ
 		
-		self.clean_up() #подчищаем старые сессии
+		self.clean_up() #РїРѕРґС‡РёС‰Р°РµРј СЃС‚Р°СЂС‹Рµ СЃРµСЃСЃРёРё
 		 
-		self.cur_session_name = md5.new(str(random.random())).hexdigest()[:10] #уникальное имя сессии
+		self.cur_session_name = md5.new(str(random.random())).hexdigest()[:10] #СѓРЅРёРєР°Р»СЊРЅРѕРµ РёРјСЏ СЃРµСЃСЃРёРё
 		
 	def start(self):
 		'''
-		создаем сессию, если предел сессий возвращаем False
+		СЃРѕР·РґР°РµРј СЃРµСЃСЃРёСЋ, РµСЃР»Рё РїСЂРµРґРµР» СЃРµСЃСЃРёР№ РІРѕР·РІСЂР°С‰Р°РµРј False
 		'''
 	
-		file(os.path.join(self.SEESION_DIR, self.cur_session_name), 'w').write('') #создаем на диске файл
+		file(os.path.join(self.SEESION_DIR, self.cur_session_name), 'w').write('') #СЃРѕР·РґР°РµРј РЅР° РґРёСЃРєРµ С„Р°Р№Р»
 		
-		names = os.listdir(self.SEESION_DIR) #считаем кол-во файлов (сессий)
-		if len(names) > self.MAX_SESSIONS: #если слишком много
-			self._delete_file(os.path.join(self.SEESION_DIR, self.cur_session_name)) #удаляем файл
+		names = os.listdir(self.SEESION_DIR) #СЃС‡РёС‚Р°РµРј РєРѕР»-РІРѕ С„Р°Р№Р»РѕРІ (СЃРµСЃСЃРёР№)
+		if len(names) > self.MAX_SESSIONS: #РµСЃР»Рё СЃР»РёС€РєРѕРј РјРЅРѕРіРѕ
+			self._delete_file(os.path.join(self.SEESION_DIR, self.cur_session_name)) #СѓРґР°Р»СЏРµРј С„Р°Р№Р»
 			return False
 
 		return True
 
 	def _delete_file(self, path):
 		'''
-		удаление файла
+		СѓРґР°Р»РµРЅРёРµ С„Р°Р№Р»Р°
 		'''
 		try:
-			os.remove(os.path.join(self.SEESION_DIR, self.cur_session_name)) #пытаемся удаить файл
+			os.remove(os.path.join(self.SEESION_DIR, self.cur_session_name)) #РїС‹С‚Р°РµРјСЃСЏ СѓРґР°РёС‚СЊ С„Р°Р№Р»
 		except OSError, er: 
-			if er.errno != 2: #если такого файла нет - значит его удалила другая копия скрипта
-				raise er #если другая какая-то ошибка - это весьма странно
+			if er.errno != 2: #РµСЃР»Рё С‚Р°РєРѕРіРѕ С„Р°Р№Р»Р° РЅРµС‚ - Р·РЅР°С‡РёС‚ РµРіРѕ СѓРґР°Р»РёР»Р° РґСЂСѓРіР°СЏ РєРѕРїРёСЏ СЃРєСЂРёРїС‚Р°
+				raise er #РµСЃР»Рё РґСЂСѓРіР°СЏ РєР°РєР°СЏ-С‚Рѕ РѕС€РёР±РєР° - СЌС‚Рѕ РІРµСЃСЊРјР° СЃС‚СЂР°РЅРЅРѕ
 
 	def end(self):
 		'''
-		закрываем сессию
+		Р·Р°РєСЂС‹РІР°РµРј СЃРµСЃСЃРёСЋ
 		'''
 		self._delete_file(os.path.join(self.SEESION_DIR, self.cur_session_name))
 				
 	def clean_up(self):
 		'''
-		подчищаем старые сессии - которые не закрылись (например скрипт вдруг упал)
+		РїРѕРґС‡РёС‰Р°РµРј СЃС‚Р°СЂС‹Рµ СЃРµСЃСЃРёРё - РєРѕС‚РѕСЂС‹Рµ РЅРµ Р·Р°РєСЂС‹Р»РёСЃСЊ (РЅР°РїСЂРёРјРµСЂ СЃРєСЂРёРїС‚ РІРґСЂСѓРі СѓРїР°Р»)
 		'''
 		for files in os.listdir(self.SEESION_DIR): 
-			if time.time() - os.path.getmtime(os.path.join(self.SEESION_DIR, files)) > self.CLEAN_TIME: #если файл слишком старый
-				self._delete_file(os.path.join(self.SEESION_DIR, files)) #трем его нафиг
+			if time.time() - os.path.getmtime(os.path.join(self.SEESION_DIR, files)) > self.CLEAN_TIME: #РµСЃР»Рё С„Р°Р№Р» СЃР»РёС€РєРѕРј СЃС‚Р°СЂС‹Р№
+				self._delete_file(os.path.join(self.SEESION_DIR, files)) #С‚СЂРµРј РµРіРѕ РЅР°С„РёРі

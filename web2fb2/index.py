@@ -43,7 +43,7 @@ def draw_header():
 </br></br></br></br></br></br></br>
 <div align="center">
 <h1>web2fb2</h1>
-<h3 style="color: red;">attention! service on prototype phase! for developing and testing purpose only.</h3>
+<h3 style="color: red;">Attention! Service is in testing mode. For tests and development only.</h3>
 	"""
 
 def draw_footer():
@@ -56,9 +56,9 @@ def draw_footer():
 <div align="center" style="position: absolute; bottom: 0px; left: 0px; width: 100%;">
 <table width="100%" cellpadding="5">
 <tr valign="bottom">
-<td width="30%" align="left">developing: Ivan El'chin</td>
-<td align="center" valign="middle">supporting & sponsoring:<br /><a href="http://www.iscriptum.com/"><img border="0" src="http://www.iscriptum.com/iscriptum_logo_136x37_tr.png" /></a></td>
-<td width="30%" align="right">project management on assembla.com: <a href="http://www.assembla.com/spaces/web2fb2">web2fb2</a></td>
+<td width="30%" align="left">Development: Ivan El'chin</td>
+<td align="center" valign="middle">Support and Sponsorship:<br /><a href="http://www.iscriptum.com/"><img border="0" src="http://www.iscriptum.com/iscriptum_logo_136x37_tr.png" /></a></td>
+<td width="30%" align="right">Project management on assembla.com: <a href="http://www.assembla.com/spaces/web2fb2">web2fb2</a></td>
 </tr>
 </table>
 </div>
@@ -112,9 +112,9 @@ def draw_result(stat):
 	r += '''Generated from <i>%s </i>''' % stat['url']
 	
 	if stat['img']:
-		r += '''with images'''
+		r += '''( with images )'''
 	else:
-		r += '''without images'''
+		r += '''( without images )'''
 	r+= "<br/>"
 	r += '''
 	Generating time: %.1f sec<br/>
@@ -138,7 +138,7 @@ def draw_descr(stat):
 	<br />
 	<table><tr><td>&nbsp;</td><td>
 	<div style="position:relative; border: 1px solid #000000;">
-	<center><strong>Check description. If wrong fill in as you think fit</strong></center>
+	<center><strong>Check description. If wrong fill in as you think fit.</strong></center>
 	<form method="get" action="">
 	  <table>
 		<tr>
@@ -189,8 +189,8 @@ def draw_try(url):
 	'''
 	вывод, если пользователей многовато
 	'''
-	return '''Sorry, many users generating ebookz. Please try again in a few minutes.<br />
-<h3><a href = '%s'>Press to try again to continue</a></h3>''' % url
+	return '''Sorry, too many users are generating ebookz. Please try again a little later.<br />
+<h3><a href = '%s'> Press to continue (try again if fail)</a></h3>''' % url
 
 def main():
 	log.info('************************************')
