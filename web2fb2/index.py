@@ -109,24 +109,24 @@ def draw_result(stat):
 	<table><tr><td>&nbsp;</td><td>
 	<div align='center'  style = 'position: relative; border: 1px dotted #999999; padding: 3px; font-size:13px; text-align: left;'>
 	'''
-	r += '''Generated from <i>%s </i>''' % stat['url']
+	r += '''Generated from <i>%s </i>''' % stat.url
 	
-	if stat['img']:
+	if stat.img:
 		r += '''( with images )'''
 	else:
 		r += '''( without images )'''
 	r+= "<br/>"
 	r += '''
 	Generating time: %.1f sec<br/>
-	''' % stat['work_time']
+	''' % stat.work_time
 	r += '''</div>
 	</td><td>&nbsp;</td></tr></table>
 	<br /><br />
 	'''
 	
 	r += '''
-		<b>Download link:</b> <a href = '%s'>%s</a> - %s KB
-		''' % (stat['path_with_file'], stat['file_name'], stat['file_size'] // 1024)
+		<b>Download link:</b> <a href = '%s/%s'>%s</a> - %s KB
+		''' % (stat.path, stat.file_name, stat.file_name, stat.file_size // 1024)
 	r += '''<br /><br />'''
 	return r
 
@@ -167,14 +167,14 @@ def draw_descr(stat):
 	  <input name="set_descr" type="hidden" value="True">
 	  <input name="url" type="hidden" value="%(url)s">
 	''' % {
-			'title': stat.get('title', '') or '',
-			'author-first': stat.get('author-first', '') or '',
-			'author-middle': stat.get('author-middle', '') or '',
-			'author-last': stat.get('author-last', '') or '',
-			'url': stat.get('url', ''),
+			'title': stat.descr.get('title', '') or '',
+			'author-first': stat.descr.get('author-first', '') or '',
+			'author-middle': stat.descr.get('author-middle', '') or '',
+			'author-last': stat.descr.get('author-last', '') or '',
+			'url': stat.url,
 		}
 	
-	if stat['img']:
+	if stat.img:
 		r += '<input name="img" type="hidden" value="True">'
 	  
 	r += """
@@ -227,27 +227,30 @@ def main():
 		else:
 			log.info('Yes! new session')
 			
-			descr = {} 
+			params = process.web_params()
+			params.url = url
+			
 			log.info('Set descr for url %s' % url)
 			#заполняем описание
-			if set_descr: 
-				descr['author_first'] = form.getvalue('author_first', '').decode('UTF-8')
-				descr['author_middle'] = form.getvalue('author_middle', '').decode('UTF-8')
-				descr['author_last'] = form.getvalue('author_last', '').decode('UTF-8')
-				descr['title'] = form.getvalue('title', '').decode('UTF-8')
+			if set_descr:
+				params.descr = {}
+				params.descr['author_first'] = form.getvalue('author_first', '').decode('UTF-8')
+				params.descr['author_middle'] = form.getvalue('author_middle', '').decode('UTF-8')
+				params.descr['author_last'] = form.getvalue('author_last', '').decode('UTF-8')
+				params.descr['title'] = form.getvalue('title', '').decode('UTF-8')
 			
 			#работаем с картинками или без
 			if img:
-				is_img = True # с картинками
+				params.is_img = True # с картинками
 				log.info('With images. for url: %s' % url)
 			else:
-				is_img = False # без картинок
+				params.is_img = False # без картинок
 				log.info('Without images. for url: %s' % url)
 
 			#запускаем сам процесс, перехватываем все неперехваченые ошибки в лог
 			log.debug('url: %s Start process' % url)
 			try:
-				rez = process.process().do_web(url, is_img, descr) # с картинками
+				rez = process.process().do_web(params) # с картинками
 			except:
 				log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 				print_utf8(draw_error('Internal error'))
@@ -260,8 +263,8 @@ def main():
 					print_utf8(draw_form())
 				elif rez[0] == 1:
 					stat = rez[1]
-					log.info('url: %s Stat: %s' % (url, stat))
-					log.info('url: %s Draw result: %s' % (url, stat['path_with_file']))
+					#log.info('url: %s Stat: %s' % (url, stat))
+					log.info('url: %s Draw result: %s' % (url, stat.path_with_file))
 					print_utf8(draw_result(stat))
 					print_utf8(draw_descr(stat))
 			

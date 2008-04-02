@@ -14,6 +14,8 @@ import shutil
 import time
 import os
 import StringIO
+import cStringIO
+import zipfile
 
 import chardet
 from BeautifulSoup import BeautifulSoup
@@ -29,6 +31,24 @@ LOGZ_PATH = 'logz' #папка где будут логи лежать
 #http://python.com.ua/ru/news/2006/04/07/rabota-s-fajlami/
 
 log = logging.getLogger('web2fb2.process')
+
+class web_params(object):
+	def __init__(self):
+		self.url = ''
+		self.is_img = ''
+		self.descr = None
+		#self.is_zip = False
+		self.is_zip = True
+		
+class ebook_stat_(object):
+	def __init__(self):
+		self.file_size = 0
+		self.work_time = 0.0
+		self.url = ''
+		self.path_with_file = ''
+		self.file_name = '' 
+		self.img = False
+		self.descr = None
 
 def clean_up():
 	'''
@@ -47,9 +67,10 @@ def clean_up():
 			shutil.rmtree(os.path.join(TEMP_PATH, dir))
 			
 class process:
-	def do_web(self, url, is_img, descr = None):
+	def do_web(self, params):
+		
 		#настраиваем логгер, чтоб логи сыпались в еще одно место (отдельный файл)
-		log_file_name = urlparse.urlparse(url)[1][:48] + '_' + md5.new(url).hexdigest()[:10] + '.log'
+		log_file_name = urlparse.urlparse(params.url)[1][:48] + '_' + md5.new(params.url).hexdigest()[:10] + '.log'
 		
 		handler = logging.handlers.RotatingFileHandler(os.path.join(LOGZ_PATH, log_file_name), maxBytes = 50000, backupCount = 1)
 		handler.setFormatter(logging.Formatter('%(asctime)s %(name)-24s %(levelname)-8s %(message)s'))			
@@ -58,11 +79,11 @@ class process:
 		
 		#начало работы
 		log.info('************************************')
-		log.info(str(url))
+		log.info(str(params.url))
 		
 		#перехватываем все ошибки в лог
 		try:
-			rez = self.web(url, is_img, descr)
+			rez = self.web(params)
 		except:
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 			return (0, 'Internal error')
@@ -70,39 +91,32 @@ class process:
 			return rez
 
 
-	def web(self, url, is_img, descr = None):
+	def web(self, params):
 		
 		start_time = time.time() #засекаем время
 		
 		#проверяем урл
 		log.debug('Checking url')
-		if not url:
+		if not params.url:
 			log.warning('Bad url')
 			return (0, bad_url)
+		
+		ebook_stat = ebook_stat_()
+		ebook_stat.url = params.url
 		
 		#генерируем имя для папок и файлов
 		#имя временной папки генерится на основе урла и того - с картинкаи он или без
 		#это нужно для кеширования
-		source_folder_name = md5.new(url + str(is_img)).hexdigest()[:10]
-		#имя папки с результатом - случайное
-		#ибо если кто-то поменяет дескпишн - мы fb2 сгенерим его в новую папку
-		ebookz_folder_name = md5.new(str(random.random())).hexdigest()[:10]
+		source_folder_name = md5.new(params.url + str(params.is_img)).hexdigest()[:10]
 		
 		log.debug('Generated source folder name: %s' % (source_folder_name))
-		log.debug('Generated ebookz folder name: %s' % (ebookz_folder_name))
-				
+		
 		source_folder = os.path.join(TEMP_PATH, source_folder_name)
-				
-		result_folder = os.path.join(EBOOKZ_PATH, ebookz_folder_name)
 
 		source_file_name = '__ebook.html'
 		
-		#генерируем имя для получившегося файла
-		file_name = urlparse.urlparse(url)[1][:48] + '.fb2'
-		log.debug('Generated file name: %s' % (file_name))
-		
 		try:
-			log.debug('Try to set  new time for %s' % os.path.join(source_folder, file_name))
+			log.debug('Try to set  new time for %s' % os.path.join(source_folder))
 			os.utime(os.path.join(source_folder), None) #пытаемся перевести время модификации папки, чтоб ее не удалили при подчистке
 		except OSError, er:
 			log.debug('Cant set new time')
@@ -128,7 +142,7 @@ class process:
 			log.info('Url downloading')
 			log.debug('Start url downloading')
 			try:
-				data, real_url = self.download_html(url)
+				data, real_url = self.download_html(params.url)
 			except (urllib2.HTTPError, urllib2.URLError, IOError, ValueError), er:
 				log.warning('Download error %s' % (er))
 				return (0, er)
@@ -137,14 +151,14 @@ class process:
 		
 			#чистка html, получение списка картинок
 			log.debug('Start processing html')
-			data, imgs_list = process_html().do(data, source_folder, url, is_img)
+			data, imgs_list = process_html().do(data, source_folder, params.url, params.is_img)
 			log.debug('End of processing html')
 		
 			#записываем html в файл
 			log.debug('Writing source file: %s' % os.path.join(source_folder, source_file_name))
 			file(os.path.join(source_folder, source_file_name), 'w').write(data)
 		
-			if is_img:
+			if params.is_img:
 				#качаем картинки
 				log.debug('Start image downloading')
 				imgs_down = img_download.download(imgs_list, source_folder, log)
@@ -154,57 +168,84 @@ class process:
 		log.debug('Reading source file: %s' % os.path.join(source_folder, source_file_name))
 		data = file(os.path.join(source_folder, source_file_name)).read()
 		
-		params = h2fb.default_params.copy()
-		params['data'] = data
-		params['verbose'] = 1
-		params['encoding-from'] = 'UTF-8'
-		params['encoding-to'] = 'UTF-8'
-		params['convert-images'] = 1
+		h2fb_params = h2fb.default_params.copy()
+		h2fb_params['data'] = data
+		h2fb_params['verbose'] = 1
+		h2fb_params['encoding-from'] = 'UTF-8'
+		h2fb_params['encoding-to'] = 'UTF-8'
+		h2fb_params['convert-images'] = 1
 		#params['file-name'] = os.path.join(source_folder, file_name)
-		if is_img:
-			params['skip-images'] = 0
-			
-		if descr:
+		if params.is_img:
+			h2fb_params['skip-images'] = 0
+
+		if params.descr:
 			log.info('Set descr')
-			title = descr.get('title', None)
-			author_first = descr.get('author_first', None)
-			author_middle = descr.get('author_middle', None)
-			author_last = descr.get('author_last', None)
+			title = params.descr.get('title', None)
+			author_first = params.descr.get('author_first', None)
+			author_middle = params.descr.get('author_middle', None)
+			author_last = params.descr.get('author_last', None)
 			
-			if title != None: params['title'] = title
-			if author_first != None: params['author-first'] = author_first
-			if author_middle != None: params['author-middle'] = author_middle
-			if author_last != None: params['author-last'] = author_last
+			if title != None: h2fb_params['title'] = title
+			if author_first != None: h2fb_params['author-first'] = author_first
+			if author_middle != None: h2fb_params['author-middle'] = author_middle
+			if author_last != None: h2fb_params['author-last'] = author_last
 				
-		params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
+		h2fb_params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
 		
 		#собственно преобразование
 		log.debug('Start h2fb process')
 		mp = h2fb.MyHTMLParser()
-		out_data = mp.process(params)
-		descr = mp.get_descr()
+		out_data = mp.process(h2fb_params)
+		ebook_stat.descr = mp.get_descr()
 		log.debug('End of h2fb process')
+		
+		#генерим имя файла и папки для готовой книги
+		#имя папки с результатом - случайное
+		ebookz_folder_name = md5.new(str(random.random())).hexdigest()[:10]
+		log.debug('Generated ebookz folder name: %s' % (ebookz_folder_name))
+		
+		result_folder = os.path.join(EBOOKZ_PATH, ebookz_folder_name)
+		
+		ebook_stat.path = result_folder
+		
+		#генерируем имя для получившегося файла
+		tmp_name = self.gen_name('_'.join(( ebook_stat.descr['author-first'], ebook_stat.descr['title'] )))
+		if tmp_name:
+			file_name = tmp_name + '.fb2'
+		else:
+			file_name = urlparse.urlparse(params.url)[1][:48] + '.fb2'
+		log.debug('Generated file name: %s' % (file_name))
 		
 		#создаем папку для готовой книги
 		os.mkdir(result_folder)
 		
+		#zip файл
+		if params.is_zip:
+			f = cStringIO.StringIO()
+			zp = zipfile.ZipFile(f, 'w')
+			
+			zip_info = zipfile.ZipInfo(file_name)
+			zip_info.date_time = time.localtime(time.time())[:6]
+			zip_info.compress_type = zipfile.ZIP_DEFLATED
+			
+			zp.writestr(zip_info, out_data)
+			zp.close()
+			
+			out_data = f.getvalue()
+			f.close()
+			file_name += '.zip'
+		
+		ebook_stat.file_name  = file_name
+		
 		#записываем книгу
 		log.debug('Writing ebook: %s into: %s (ebook len: %s)' % (file_name, result_folder, len(out_data)))
-		file(os.path.join(result_folder, file_name), 'w').write(out_data)
+		file(os.path.join(result_folder, file_name), 'wb').write(out_data)
+		
+		ebook_stat.file_size = os.path.getsize(os.path.join(result_folder, file_name))    # размер файла в байтах
+		ebook_stat.work_time = time.time() - start_time, #размер книги в килобайтах
+		ebook_stat.img = params.is_img
 
-		#формируем отчет
-		stat = {
-			'file_size': os.path.getsize(os.path.join(result_folder, file_name)),    # размер файла в байтах
-			'work_time': time.time() - start_time, #размер книги в килобайтах
-			'url': url, #изначальный урл
-			'path_with_file': os.path.join(result_folder, file_name),
-			'file_name': file_name, 
-			'img': is_img
-		}
-			
-		stat.update(descr) #добавляем в словарь дескрипшн
-
-		return (1, stat)
+		return (1, ebook_stat)
 	
 	def download_html(self, url):
 		'''
@@ -221,6 +262,96 @@ class process:
 		handle.close()
 		return text, realurl
 	
+	def gen_name(self, name):
+		'''
+		функция пробразования имени файла.
+		если в имени есть русские быквы - переводит их в транслит.
+		если в имени есть быквы других алфавитов, кроме русских и аглийских - возвращает None
+		вырезает все ненужные символы, уменьшает имя до 64 символов
+		'''
+		
+		good_alphanum = u'abcdefghijklmnopqrstuvwxyz1234567890' #хорошие символы, которые надо оставить
+		good_not_convert = u'' #хорошие символы, которые не явл. быквами или цифрами, но которые тоже надо оставить
+		convert_2_space = u' _' #сиволы, которые надо конверитировать в пробельные
+			
+		space_char = '_' #символ пробела
+		
+		trans = {
+			u'а':u'a',
+			u'б':u'b',
+			u'в':u'v',
+			u'г':u'g',
+			u'д':u'd',
+			u'е':u'e',
+			u'ё':u'e',
+			u'ж':u'zh',
+			u'з':u'z',
+			u'и':u'i',
+			u'й':u'i',
+			u'к':u'k',
+			u'л':u'l',
+			u'м':u'm',
+			u'н':u'n',
+			u'о':u'o',
+			u'р':u'r',
+			u'п':u'p',
+			u'с':u's',
+			u'т':u't',
+			u'у':u'u',
+			u'ф':u'f',
+			u'х':u'h',
+			u'ц':u'ts',
+			u'ч':u'ch',
+			u'ш':u'sh',
+			u'щ':u'sch',
+			u'ь':u'\'',
+			u'ы':u'y',
+			u'ъ':u'\'',
+			u'э':u'e',
+			u'ю':u'yu',
+			u'я':u'ya'
+		}
+			
+		name = name.lower()
+			
+		tmp_name = u''
+		for c in name:
+			if ord(c) > 128: #если выходит за пределы латиницы
+				if c in trans.keys(): #и при этом русские
+					new_c = trans.get(c, u'') #транслитерация
+				else:
+					return None
+			else:
+				new_c = c
+			tmp_name += new_c
+			
+			
+		#фильтруем символы
+		new_name = u''
+		alphanum_flag = False #флаг, что в имени попалась буква или цифра
+		
+		for c in tmp_name:
+			if c in good_alphanum:
+				alphanum_flag = True
+				new_name += c
+					
+			elif c in good_not_convert:
+				new_name += c
+					
+			elif c in convert_2_space:
+				if new_name:
+					if new_name[-1] != space_char: #не ставим повторяющиеся пробелы
+						new_name += space_char
+					
+		new_name = new_name.strip('-' + space_char)
+			
+		if not alphanum_flag: #
+			return None
+		
+		if not new_name:
+			return None
+			
+		return str(new_name[:64]) #обрезаем имя по 64-ый символ.
 
 class process_html:
 

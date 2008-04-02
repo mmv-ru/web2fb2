@@ -37,7 +37,7 @@ class session:
 		удаление файла
 		'''
 		try:
-			os.remove(os.path.join(self.SEESION_DIR, self.cur_session_name)) #пытаемся удаить файл
+			os.remove(path) #пытаемся удаить файл
 		except OSError, er: 
 			if er.errno != 2: #если такого файла нет - значит его удалила другая копия скрипта
 				raise er #если другая какая-то ошибка - это весьма странно
