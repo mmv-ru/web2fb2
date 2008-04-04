@@ -19,6 +19,7 @@ log.setLevel(logging.DEBUG)
 
 import process
 import sessions
+import fb_utils
 
 def print_utf8(s):
 	'''
@@ -157,22 +158,52 @@ def draw_descr(stat):
 			<br />
 			<label style="font-size:x-small">last name</label></td>
 		</tr>
+	''' % {
+			'title': stat.descr.title,
+			'author-first': stat.descr.author_first,
+			'author-middle': stat.descr.author_middle,
+			'author-last': stat.descr.author_last
+			}
+
+	#жанры рисуем
+	r += '''
 		<tr>
-		  <td>&nbsp;</td>
-		  <td>&nbsp;</td>
-		  <td>&nbsp;</td>
-		  <td align="right"><input type="submit" value = "Apply"/></td>
+			<td>Genre</td>
+			<td colspan="2">
+			<select name="genre">
+		'''
+
+	for l in fb_utils.genres().get_genres_descrs():
+		if isinstance(l, basestring):
+			r += '''<optgroup label="%s">
+			''' % l
+		else:
+			if stat.descr.genre == l[0]:
+				r += '''<option value="%s" selected='selected'>%s</option>
+							''' % (l[0], l[1])
+				
+			else:
+				r += '''<option value="%s">%s</option>
+				''' % (l[0], l[1])
+		
+	r+= '''
+		</select>
+		</td>
+		<td></td>
+	</tr>
+	'''
+	r += '''<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+		<td align="right"><input type="submit" value = "Apply"/></td>
 		</tr>
 	  </table>
 	  <input name="set_descr" type="hidden" value="True">
 	  <input name="url" type="hidden" value="%(url)s">
 	''' % {
-			'title': stat.descr.get('title', '') or '',
-			'author-first': stat.descr.get('author-first', '') or '',
-			'author-middle': stat.descr.get('author-middle', '') or '',
-			'author-last': stat.descr.get('author-last', '') or '',
-			'url': stat.url,
-		}
+			'url': stat.url
+    }
 	
 	if stat.img:
 		r += '<input name="img" type="hidden" value="True">'
@@ -231,13 +262,18 @@ def main():
 			params.url = url
 			
 			log.info('Set descr for url %s' % url)
-			#заполняем описание
+			#заполняем описани
 			if set_descr:
-				params.descr = {}
-				params.descr['author_first'] = form.getvalue('author_first', '').decode('UTF-8')
-				params.descr['author_middle'] = form.getvalue('author_middle', '').decode('UTF-8')
-				params.descr['author_last'] = form.getvalue('author_last', '').decode('UTF-8')
-				params.descr['title'] = form.getvalue('title', '').decode('UTF-8')
+				descr = fb_utils.description()
+				
+				descr.author_first = form.getvalue('author_first', '').decode('UTF-8')
+				descr.author_middle = form.getvalue('author_middle', '').decode('UTF-8')
+				descr.author_last = form.getvalue('author_last', '').decode('UTF-8')
+				descr.title = form.getvalue('title', '').decode('UTF-8')
+				descr.genre = form.getvalue('genre', '').decode('UTF-8')
+				descr.url = url
+				
+				params.descr = descr
 			
 			#работаем с картинками или без
 			if img:

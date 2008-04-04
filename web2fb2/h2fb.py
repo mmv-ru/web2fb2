@@ -25,10 +25,6 @@ Usage: %prog [options] args
     --not-detect-verses:      Not detect verses
     --not-detect-notes:       Not detect notes
     -v,--verbose=INT:         Debug
-    -title:                   Title
-    -author-first:            Author first name
-    -author-middle:           Author middle name
-    -author-last:             Author last name
 """
 
 ####
@@ -79,6 +75,7 @@ import time
 import mimetypes
 import urllib
 import locale
+import fb_utils 
 
 try:
     #raise ImportError
@@ -317,7 +314,7 @@ class MyHTMLParser(SGMLParser):
         self.descr={}                   # description
         self.bins=[]                    # images (binary objects)
         self.informer=None              # informer (for out messages)
-        self.rez_descr = {'author-first': '', 'author-middle': '', 'author-last': '', 'title': ''}
+        self.rez_descr = fb_utils.description()
         
     def handle_charref(self, name):
         """Handle decimal escaped character reference, does not handle hex.
@@ -1203,40 +1200,55 @@ class MyHTMLParser(SGMLParser):
             point = title.index('.')
             author = title[:point].strip()
             title = title[point+1:].strip()
-            author = author.split()
-            first_name = author and author[0] or ''
-            middle_name = len(author) > 2 and author[1] or ''
-            last_name = len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
+        author = author.split()
+        first_name = author and author[0] or ''
+        middle_name = len(author) > 2 and author[1] or ''
+        last_name = len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
 
-        if (self.params['author-first'] != None) or (self.params['author-middle'] != None) or (self.params['author-last'] != None):
-            first_name = self.params['author-first']
-            middle_name = self.params['author-middle']
-            last_name = self.params['author-last']
-        if (self.params['title'] != None):
-            title = self.params['title']
+        genre = fb_utils.genres().get_default()
         
-        retv='<description><title-info><genre></genre><author><first-name>%s' \
-              '</first-name><middle-name>%s' \
-              '</middle-name><last-name>%s</last-name></author>'\
-              '<book-title>%s</book-title>' % (first_name, middle_name, last_name, title)
-              
-        self.rez_descr['author-first'] = first_name
-        self.rez_descr['author-middle'] = middle_name
-        self.rez_descr['author-last'] = last_name
-        self.rez_descr['title'] = title
+        if self.params['descr']:
+            first_name = self.params['descr'].author_first
+            middle_name = self.params['descr'].author_middle
+            last_name = self.params['descr'].author_last
+            title = self.params['descr'].title
+            genre = self.params['descr'].genre
+        
+        
+        self.rez_descr.author_first = first_name
+        self.rez_descr.author_middle = middle_name
+        self.rez_descr.author_last = last_name
+        self.rez_descr.title = title
+        self.rez_descr.genre = genre
+        
+        retv = '<description>'
+        
+        #fill title-info
+        retv += '<title-info>'
+        retv += '<genre>%s</genre>' % genre
+        retv += '<author>'
+        retv += '<first-name>%s</first-name>' % first_name
+        retv += '<middle-name>%s</middle-name>' % middle_name
+        retv += '<last-name>%s</last-name>' % last_name
+        retv += '</author>'
+        retv += '<book-title>%s</book-title>' % title
         
         if 'annot' in self.descr:
             retv+='<annotation>%s</annotation>' % self.descr['annot']
-        retv+='</title-info><document-info><author><nickname></nickname></author>'\
-               '<date value="%s">%s</date>'\
-               '<id>%s</id>'\
-               '<version>1.0</version>'\
-               '<program-used>h2fb ver. %s</program-used>' \
-               '</document-info></description>' % \
-               (time.strftime('%Y-%m-%d'),
-                unicode(time.strftime('%d %B %Y, %H:%M'), self.params['sys-encoding']),
-                oct(int(time.time())),
-                version)
+        retv += '<lang></lang>'
+        retv += '</title-info>'
+        
+        #fill document-info
+        retv += '<document-info>'
+        retv += '<author><nickname></nickname></author>'
+        retv += '<program-used>web2fb2</program-used>'
+        retv += '<date value="%s">%s</date>' % (time.strftime('%Y-%m-%d'), unicode(time.strftime('%d %B %Y')))
+        retv += '<id>%s</id>' % oct(int(time.time()))
+        retv += '<version>1.0</version>'
+        retv += '</document-info>'
+        
+        retv += '</description>'
+        
         return retv
     
     def make_notes(self):
@@ -1379,10 +1391,7 @@ default_params = {
     'sys-encoding': sys_encoding,
     'informer': sys.stderr.write,
     'convert-span-to': None, # what to convert span tags to, if set to 'em' or 'emphasis' converts spans to 'emphasis', if 'strong' converts to 'strong', anything else is ignored/skipped/removed (silently)
-    'title': None,
-    'author-first': None,
-    'author-middle': None,
-    'author-last': None,
+    'descr': None
     }
 
 
@@ -1436,11 +1445,7 @@ def convert_to_fb(opts):
                                         'not-detect-verses',
                                         'not-detect-notes',
                                         'not-convert-images',
-                                        'not-convert-hyphen',
-                                        'title=',
-                                        'author-first=',
-                                        'author-middle=',
-                                        'author-last='
+                                        'not-convert-hyphen'
                                         ]
                                        )
         except getopt.GetoptError:
@@ -1489,14 +1494,6 @@ def convert_to_fb(opts):
             params['convert-hyphen']=0
         elif opt in ('-v','--verbose',):
             params['verbose']=int(val)
-        elif opt in ('--title',):
-            params['title']=str(val)
-        elif opt in ('--author-first',):
-            params['author-first']=str(val)
-        elif opt in ('--author-middle',):
-            params['author-middle']=str(val)
-        elif opt in ('--author-last',):
-            params['author-last']=str(val)
         
     params['data'] = in_file.read()
     in_file.close()

@@ -37,7 +37,6 @@ class web_params(object):
 		self.url = ''
 		self.is_img = ''
 		self.descr = None
-		#self.is_zip = False
 		self.is_zip = True
 		
 class ebook_stat_(object):
@@ -180,15 +179,7 @@ class process:
 
 		if params.descr:
 			log.info('Set descr')
-			title = params.descr.get('title', None)
-			author_first = params.descr.get('author_first', None)
-			author_middle = params.descr.get('author_middle', None)
-			author_last = params.descr.get('author_last', None)
-			
-			if title != None: h2fb_params['title'] = title
-			if author_first != None: h2fb_params['author-first'] = author_first
-			if author_middle != None: h2fb_params['author-middle'] = author_middle
-			if author_last != None: h2fb_params['author-last'] = author_last
+			h2fb_params['descr'] = params.descr
 				
 		h2fb_params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
 		
@@ -209,7 +200,7 @@ class process:
 		ebook_stat.path = result_folder
 		
 		#генерируем имя для получившегося файла
-		tmp_name = self.gen_name('_'.join(( ebook_stat.descr['author-first'], ebook_stat.descr['title'] )))
+		tmp_name = self.gen_name('_'.join(( ebook_stat.descr.author_first, ebook_stat.descr.title )))
 		if tmp_name:
 			file_name = tmp_name + '.fb2'
 		else:
