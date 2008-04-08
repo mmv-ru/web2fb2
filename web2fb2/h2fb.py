@@ -76,6 +76,7 @@ import mimetypes
 import urllib
 import locale
 import fb_utils 
+import random
 
 try:
     #raise ImportError
@@ -379,7 +380,7 @@ class MyHTMLParser(SGMLParser):
                    '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
                    self.params['encoding-to'] + \
                    self.make_description() + \
-                    '<body>%s</body>' % self.out + \
+                    '<body>\n%s\n</body>\n' % self.out + \
                     self.make_notes() + \
                     self.make_bins() + '</FictionBook>').encode(self.params['encoding-to'],'xmlcharrefreplace')
         
@@ -794,12 +795,38 @@ class MyHTMLParser(SGMLParser):
                         id = ''
                 except KeyError:
                     pass
-        self.out='\n'.join(self.out). \
+        
+        #join with dont use newline in <p> and <v> tags
+        out_tmp = ''
+        for i in xrange(len(self.out)):
+            is_new_line = True
+
+            if i >= (len(self.out) -1 ):
+                is_new_line = False
+            elif self.out[i].startswith('<p') or self.out[i].startswith('<v'): #if p or v tag
+                is_new_line = False
+            elif self.out[i+1].startswith('</p') or self.out[i+1].startswith('</p'): #if next tag is p or v
+                is_new_line = False
+            
+            if is_new_line:
+                out_tmp += self.out[i] + '\n'
+            else:
+                out_tmp += self.out[i]
+            
+        self.out = out_tmp. \
              replace(_CH_REPL_AMP, '&amp;'). \
              replace(_CH_REPL_LT,'&lt;').    \
              replace(_CH_REPL_GT,'&gt;').    \
              replace('...',_CH_DOTS).        \
              strip()
+        
+        #self.out = '\n'.join(self.out). \
+        #    replace(_CH_REPL_AMP, '&amp;'). \
+        #    replace(_CH_REPL_LT,'&lt;').    \
+        #    replace(_CH_REPL_GT,'&gt;').    \
+        #    replace('...',_CH_DOTS).        \
+        #    strip()
+        
         if self.params['convert-hyphen']:
             self.out=self.out.replace("- ",_CH_TIRE+" ").replace(" -"," "+_CH_TIRE)
 
@@ -814,8 +841,8 @@ class MyHTMLParser(SGMLParser):
             if self.out.startswith('</section>'):
                 self.out=self.out[len('</section>'):]
             else:
-                self.out='<section>'+self.out
-        self.out+='</section>'
+                self.out='<section>\n'+self.out
+        self.out+='\n</section>'
         self.out=_RE_EL.sub(r'\1',self.out)
 
     def detect_headers(self, data):
@@ -1061,6 +1088,7 @@ class MyHTMLParser(SGMLParser):
                               ) and raw[j][-1] in _SENTENCE_FIN:
                         pfound += 1
                         res.extend(['<p>',_CH_FLOW + '\n'.join(raw[jstart:j+1]),'</p>'])
+                        #res.extend(['<p>',_CH_FLOW + ''.join(raw[jstart:j+1]),'</p>'])
                         jstart = j+1
                     j+=1
                 if pfound > 0:
@@ -1207,11 +1235,15 @@ class MyHTMLParser(SGMLParser):
 
         genre = fb_utils.genres().get_default()
         
-        if self.params['descr']:
+        if self.params['descr'].author_first != self.params['descr'].SELFDETECT:
             first_name = self.params['descr'].author_first
+        if self.params['descr'].author_middle != self.params['descr'].SELFDETECT:
             middle_name = self.params['descr'].author_middle
+        if self.params['descr'].author_last != self.params['descr'].SELFDETECT:
             last_name = self.params['descr'].author_last
+        if self.params['descr'].title != self.params['descr'].SELFDETECT:
             title = self.params['descr'].title
+        if self.params['descr'].genre != self.params['descr'].SELFDETECT:
             genre = self.params['descr'].genre
         
         
@@ -1221,33 +1253,41 @@ class MyHTMLParser(SGMLParser):
         self.rez_descr.title = title
         self.rez_descr.genre = genre
         
-        retv = '<description>'
+        
+        retv = '<description>\n'
         
         #fill title-info
-        retv += '<title-info>'
-        retv += '<genre>%s</genre>' % genre
+        retv += '<title-info>\n'
+        retv += '<genre>%s</genre>\n' % genre
         retv += '<author>'
         retv += '<first-name>%s</first-name>' % first_name
         retv += '<middle-name>%s</middle-name>' % middle_name
         retv += '<last-name>%s</last-name>' % last_name
-        retv += '</author>'
-        retv += '<book-title>%s</book-title>' % title
+        retv += '</author>\n'
+        retv += '<book-title>%s</book-title>\n' % title
         
         if 'annot' in self.descr:
-            retv+='<annotation>%s</annotation>' % self.descr['annot']
-        retv += '<lang></lang>'
-        retv += '</title-info>'
+            retv+='<annotation>%s</annotation>\n' % self.descr['annot']
+        
+        retv += '<lang>%s</lang>\n' % self.params['descr'].lang
+        self.rez_descr.lang = self.params['descr'].lang
+        
+        retv += '</title-info>\n'
         
         #fill document-info
-        retv += '<document-info>'
-        retv += '<author><nickname></nickname></author>'
-        retv += '<program-used>web2fb2</program-used>'
-        retv += '<date value="%s">%s</date>' % (time.strftime('%Y-%m-%d'), unicode(time.strftime('%d %B %Y')))
-        retv += '<id>%s</id>' % oct(int(time.time()))
-        retv += '<version>1.0</version>'
-        retv += '</document-info>'
+        retv += '<document-info>\n'
+        retv += '<author><nickname></nickname></author>\n'
+        if self.params['descr'].program_info != None:
+            retv += '<program-used>%s</program-used>\n' % self.params['descr'].program_used
+        retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
+        #retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
+        if self.params['descr'].src_url != None:
+            retv += '<src-url>%s</src-url>\n' % self.params['descr'].url
+        retv += '<id>%s</id>\n' % self.params['descr'].id
+        retv += '<version>1.0</version>\n'
+        retv += '</document-info>\n'
         
-        retv += '</description>'
+        retv += '</description>\n'
         
         return retv
     

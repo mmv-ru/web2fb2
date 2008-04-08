@@ -11,7 +11,7 @@ import time
 class session:
 	def __init__(self):
 		self.SEESION_DIR = 'sess' #путь к сессиям
-		self.MAX_SESSIONS = 2 #максимальное количество сессий
+		self.MAX_SESSIONS = 100 #максимальное количество сессий
 		self.CLEAN_TIME = 600 #время через которое сессии будут удалятся
 		
 		self.clean_up() #подчищаем старые сессии

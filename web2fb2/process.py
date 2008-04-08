@@ -18,8 +18,10 @@ import cStringIO
 import zipfile
 
 import chardet
+import ngram
 from BeautifulSoup import BeautifulSoup
 import h2fb
+import fb_utils
 import img_download
 
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
@@ -163,23 +165,40 @@ class process:
 				imgs_down = img_download.download(imgs_list, source_folder, log)
 				log.debug('End of image downloading')
 		
-		#готовим параметры для преобразования html2fb2
+		
 		log.debug('Reading source file: %s' % os.path.join(source_folder, source_file_name))
 		data = file(os.path.join(source_folder, source_file_name)).read()
 		
+		#детектор языка
+		log.debug('Detecting language')
+		lang = process_html().detect_lang(data)
+		log.info('Detected language: %s', lang)
+		
+		#готовим параметры для преобразования html2fb2
 		h2fb_params = h2fb.default_params.copy()
 		h2fb_params['data'] = data
 		h2fb_params['verbose'] = 1
 		h2fb_params['encoding-from'] = 'UTF-8'
 		h2fb_params['encoding-to'] = 'UTF-8'
 		h2fb_params['convert-images'] = 1
-		#params['file-name'] = os.path.join(source_folder, file_name)
+		
 		if params.is_img:
 			h2fb_params['skip-images'] = 0
-
-		if params.descr:
-			log.info('Set descr')
-			h2fb_params['descr'] = params.descr
+		
+		log.info('Set descr')
+		descr = params.descr
+			
+		descr.id = 'web2fb2_%s_%08i' % (time.strftime('%Y%m%d%H%M'),  random.randint(0, 9999999999))
+		descr.program_used = 'http://web2fb2.net/'
+		descr.src_url = params.url
+		
+		if descr.lang == descr.SELFDETECT:
+			#детектор языка
+			log.debug('Detecting language')
+			descr.lang = process_html().detect_lang(data)
+			log.info('Detected language: %s', lang)
+		
+		h2fb_params['descr'] = descr
 				
 		h2fb_params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
 		
@@ -200,7 +219,7 @@ class process:
 		ebook_stat.path = result_folder
 		
 		#генерируем имя для получившегося файла
-		tmp_name = self.gen_name('_'.join(( ebook_stat.descr.author_first, ebook_stat.descr.title )))
+		tmp_name = self.gen_name('_'.join(( ebook_stat.descr.author_last, ebook_stat.descr.author_first, ebook_stat.descr.title )))
 		if tmp_name:
 			file_name = tmp_name + '.fb2'
 		else:
@@ -377,7 +396,19 @@ class process_html:
 		
 		new_data = data.decode(tmp['encoding']).encode('UTF-8') #перекодируем в UTF8
 		return  new_data
-
+	
+	def detect_lang(self, data):
+		#clear_data
+		soup = BeautifulSoup(data)
+		text = ''.join(soup.findAll(text = True)).encode('UTF-8')
+		#print '<pre>'
+		#print text.encode('UTF-8')
+		#print '</pre>'
+		
+		#n = ngram._NGram()
+		l = ngram.NGram('lm')
+		return l.classify(text).split('.')[0]
+	
 	def process_images(self, data, source_folder, url):
 		'''
 		обработка картинок в html:

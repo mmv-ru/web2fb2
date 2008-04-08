@@ -192,6 +192,16 @@ def draw_descr(stat):
 		<td></td>
 	</tr>
 	'''
+	
+	r += '''
+		<tr>
+		<td>Language:</td>
+		<td align="left"><input type="text" name="lang" size="2" maxlength="2" value = '%s' /></td>
+		<td></td>
+		<td></td>
+		</tr>
+	''' % stat.descr.lang
+	
 	r += '''<tr>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
@@ -263,17 +273,28 @@ def main():
 			
 			log.info('Set descr for url %s' % url)
 			#заполняем описани
+			
+			descr = fb_utils.description()
+			
 			if set_descr:
-				descr = fb_utils.description()
-				
 				descr.author_first = form.getvalue('author_first', '').decode('UTF-8')
 				descr.author_middle = form.getvalue('author_middle', '').decode('UTF-8')
 				descr.author_last = form.getvalue('author_last', '').decode('UTF-8')
 				descr.title = form.getvalue('title', '').decode('UTF-8')
 				descr.genre = form.getvalue('genre', '').decode('UTF-8')
-				descr.url = url
+				descr.lang = form.getvalue('lang', '').decode('UTF-8')
+
+			else:
+				descr.author_first = descr.SELFDETECT
+				descr.author_middle = descr.SELFDETECT
+				descr.author_last = descr.SELFDETECT
+				descr.title = descr.SELFDETECT
+				descr.genre = descr.SELFDETECT
+				descr.lang = descr.SELFDETECT
 				
-				params.descr = descr
+			descr.url = url
+				
+			params.descr = descr
 			
 			#работаем с картинками или без
 			if img:
