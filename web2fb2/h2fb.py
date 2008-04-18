@@ -382,7 +382,13 @@ class MyHTMLParser(SGMLParser):
                    self.make_description() + \
                     '<body>\n%s\n</body>\n' % self.out + \
                     self.make_notes() + \
-                    self.make_bins() + '</FictionBook>').encode(self.params['encoding-to'],'xmlcharrefreplace')
+                    self.make_bins() + '</FictionBook>')
+        
+        #bad! very bad!
+        self.out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", self.out)
+        
+        
+        self.out = self.out.encode(self.params['encoding-to'],'xmlcharrefreplace')
         
         #self.out = (self.make_description() + \
         #            '<body>%s</body>' % self.out + \
@@ -992,6 +998,7 @@ class MyHTMLParser(SGMLParser):
                         i = istart + len(res)-1
                 sect_found = 0
             i += 1
+    
 
     def detect_verses(self):
         '''
@@ -1113,10 +1120,16 @@ class MyHTMLParser(SGMLParser):
                         pass
                 if iend == sys.maxint:
                     iend=0
-                text=text[:istart]+ \
-                      '<emphasis>'+ \
-                      text[istart+1:iend or None]+ \
-                      '</emphasis>'+ \
+                
+                if text[istart+1:iend or None]:
+                    emp = '<emphasis>'+ \
+                          text[istart+1:iend or None]+ \
+                          '</emphasis>'
+                else:
+                    emp = ''
+
+                text = text[:istart]+ \
+                    emp+ \
                       (iend and text[iend+(text[iend]=='_'):] or '')
             else:
                 break
@@ -1267,7 +1280,8 @@ class MyHTMLParser(SGMLParser):
         retv += '<book-title>%s</book-title>\n' % title
         
         if 'annot' in self.descr:
-            retv+='<annotation>%s</annotation>\n' % self.descr['annot']
+            if self.descr['annot']:
+                retv+='<annotation>%s</annotation>\n' % self.descr['annot']
         
         retv += '<lang>%s</lang>\n' % self.params['descr'].lang
         self.rez_descr.lang = self.params['descr'].lang
