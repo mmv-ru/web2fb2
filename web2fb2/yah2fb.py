@@ -216,44 +216,54 @@ class html2fb2(object):
 		
 	def proc_tag(self, parent_tag):
 
-		for tag in parent_tag.contents: #идем по вложенным тегам
+		tags = parent_tag.childGenerator()
 		
-			if tag.__class__ == NavigableString: #если строка - добавляем в текст
-				text = self.proc_text(tag)
-				if text:
-					self.fb2.start_tag('p')
-					self.fb2.add_text(text)
-					self.fb2.end_tag('p')
+		while 1:
+			try:
 			
-			
-			elif tag.__class__ == Tag: #если теги
-				#пропускаемые теги
-				if tag.name in ['script']: #пропускаемые теги
-					pass
-
-				#специально обарабатываемые теги
-				elif tag.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']: #заголовок
-					self.fb2.end_tag('section')
-					self.fb2.start_tag('section')
-					self.fb2.start_tag('title')
-					self.proc_tag(tag)
-					self.fb2.end_tag('title')
-
-				elif tag.name == 'img':
-					if not self.params['skip-images']:
-						src = tag['src']
-						if src:
-							self.fb2.add_img(urllib.unquote(src))
-
-				else:
-					self.proc_tag(tag)
+				tag = tags.next()
 				
 				
+				if tag.__class__ == NavigableString: #если строка - добавляем в текст
+					text = self.proc_text(tag)
+					if text:
+						self.fb2.start_tag('p')
+						self.fb2.add_text(text)
+						self.fb2.end_tag('p')
+						
+				
+						
+				elif tag.__class__ == Tag: #если теги
+					#пропускаемые теги
+					if tag.name in ['script', 'form', 'style']: #пропускаемые теги
+						pass
+					
+					#специально обарабатываемые теги
+					elif tag.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']: #заголовок
+						self.fb2.end_tag('section')
+						self.fb2.start_tag('section')
+						self.fb2.start_tag('title')
+						self.proc_tag(tag)
+						self.fb2.end_tag('title')
+						
+					elif tag.name == 'img':
+						if not self.params['skip-images']:
+							src = tag['src']
+							if src:
+								self.fb2.add_img(urllib.unquote(src))
+					
+					else:
+						self.proc_tag(tag)
+				
+				
+			except StopIteration:
+				break
 
 if __name__ == '__main__':
 	
 	params = {}
 	params['data'] = file('test.html').read()
+	#params['data'] = file('mail.htm').read()
 	params['descr'] = fb_utils.description()
 	params['skip-images'] = True
 
