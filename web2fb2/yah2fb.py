@@ -26,13 +26,12 @@ class binary(object):
 			self.f.write(base64.encodestring(data))
 			self.f.write('</binary>\n')
 			self.ids.append(id)
-		
 
 class fb2(object):
 	def __init__(self):
 		self.FB_TAGS = ['section', 'title', 'p']
 		self.cr_tags = ['p']
-		
+
 		self.body = ''
 		self.description = ''
 		self.binary = binary()
@@ -183,6 +182,9 @@ class html2fb2(object):
 			
 		if descr.author_last == descr.SELFDETECT:
 			descr.author_last = ''
+		
+		if descr.genre == descr.SELFDETECT:
+			descr.genre = fb_utils.genres().get_default()
 		
 		self.fb2.make_description(descr)
 		#
