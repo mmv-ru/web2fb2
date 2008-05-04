@@ -21,6 +21,7 @@ import chardet
 import ngram
 from BeautifulSoup import BeautifulSoup
 import h2fb
+import yah2fb
 import fb_utils
 import img_download
 
@@ -40,6 +41,7 @@ class web_params(object):
 		self.is_img = ''
 		self.descr = None
 		self.is_zip = True
+		self.yah2fb = False
 		
 class ebook_stat_(object):
 	def __init__(self):
@@ -204,9 +206,15 @@ class process:
 		
 		#собственно преобразование
 		log.debug('Start h2fb process')
-		mp = h2fb.MyHTMLParser()
-		out_data = mp.process(h2fb_params)
-		ebook_stat.descr = mp.get_descr()
+		if not params.yah2fb:
+			mp = h2fb.MyHTMLParser()
+			out_data = mp.process(h2fb_params)
+			ebook_stat.descr = mp.get_descr()
+		else:
+			rez = yah2fb.html2fb2().process(h2fb_params)
+			out_data = rez['data']
+			ebook_stat.descr = rez['descr']
+			
 		log.debug('End of h2fb process')
 		
 		#генерим имя файла и папки для готовой книги
@@ -420,9 +428,17 @@ class process_html:
 		возвращает  HTML с замененными путями и список картинок
 		'''
 		
-		imgs_list = {}
-		
 		soup = BeautifulSoup(data)
+		
+		#вычисляем базовый урл
+		try:
+			base_url = soup.html.head.base['href']
+		except (KeyError, TypeError, AttributeError), er:
+			base_url = url
+			
+		log.debug('Base url = %s', base_url)
+		
+		imgs_list = {}
 		img_tags = soup.findAll(name = 'img')
 		
 		log.info('Find %s images' % (len(img_tags)))
@@ -430,7 +446,7 @@ class process_html:
 		for img_tag in img_tags:
 			if img_tag['src']:
 				#делаем абсолютный урл
-				new_url = urlparse.urljoin(url, img_tag['src'])
+				new_url = urlparse.urljoin(base_url, img_tag['src'])
 				
 				#генерим имя картинки
 				img_name = md5.new(str(random.random())).hexdigest()[:10]
