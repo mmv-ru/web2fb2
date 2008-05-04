@@ -288,53 +288,57 @@ class process:
 		вырезает все ненужные символы, уменьшает имя до 64 символов
 		'''
 		
+		inglish_chars = u'§©«»' + u''.join([chr(x) for x in xrange(127)]) #английские символы
+		
+		#русские символы
+		trans = {
+					u'а':u'a',
+					u'б':u'b',
+					u'в':u'v',
+					u'г':u'g',
+					u'д':u'd',
+					u'е':u'e',
+					u'ё':u'e',
+					u'ж':u'zh',
+					u'з':u'z',
+					u'и':u'i',
+					u'й':u'i',
+					u'к':u'k',
+					u'л':u'l',
+					u'м':u'm',
+					u'н':u'n',
+					u'о':u'o',
+					u'р':u'r',
+					u'п':u'p',
+					u'с':u's',
+					u'т':u't',
+					u'у':u'u',
+					u'ф':u'f',
+					u'х':u'h',
+					u'ц':u'ts',
+					u'ч':u'ch',
+					u'ш':u'sh',
+					u'щ':u'sch',
+					u'ь':u'\'',
+					u'ы':u'y',
+					u'ъ':u'\'',
+					u'э':u'e',
+					u'ю':u'yu',
+					u'я':u'ya'
+				}
+		
+		
 		good_alphanum = u'abcdefghijklmnopqrstuvwxyz1234567890' #хорошие символы, которые надо оставить
 		good_not_convert = u'' #хорошие символы, которые не явл. быквами или цифрами, но которые тоже надо оставить
 		convert_2_space = u' _' #сиволы, которые надо конверитировать в пробельные
 			
 		space_char = '_' #символ пробела
-		
-		trans = {
-			u'а':u'a',
-			u'б':u'b',
-			u'в':u'v',
-			u'г':u'g',
-			u'д':u'd',
-			u'е':u'e',
-			u'ё':u'e',
-			u'ж':u'zh',
-			u'з':u'z',
-			u'и':u'i',
-			u'й':u'i',
-			u'к':u'k',
-			u'л':u'l',
-			u'м':u'm',
-			u'н':u'n',
-			u'о':u'o',
-			u'р':u'r',
-			u'п':u'p',
-			u'с':u's',
-			u'т':u't',
-			u'у':u'u',
-			u'ф':u'f',
-			u'х':u'h',
-			u'ц':u'ts',
-			u'ч':u'ch',
-			u'ш':u'sh',
-			u'щ':u'sch',
-			u'ь':u'\'',
-			u'ы':u'y',
-			u'ъ':u'\'',
-			u'э':u'e',
-			u'ю':u'yu',
-			u'я':u'ya'
-		}
-			
+
 		name = name.lower()
 			
 		tmp_name = u''
 		for c in name:
-			if ord(c) > 128: #если выходит за пределы латиницы
+			if c not in inglish_chars: #если выходит за пределы латиницы
 				if c in trans.keys(): #и при этом русские
 					new_c = trans.get(c, u'') #транслитерация
 				else:
