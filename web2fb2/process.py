@@ -17,6 +17,9 @@ import StringIO
 import cStringIO
 import zipfile
 
+import xmlrpclib
+import base64
+
 import chardet
 import ngram
 from BeautifulSoup import BeautifulSoup
@@ -52,6 +55,23 @@ class ebook_stat_(object):
 		self.file_name = '' 
 		self.img = False
 		self.descr = None
+		
+class BasicHTTPAuthTransport(xmlrpclib.Transport):
+	'''
+	реализует авторизацию для XML-RPC
+	'''
+	user_agent = '*py*'
+	credentials = ()
+
+	def send_basic_auth(self, connection):
+		auth = base64.encodestring('%s:%s' % self.credentials).strip()
+		auth = 'Basic %s' % (auth, )
+		connection.putheader('Authorization', auth)
+
+	def send_host(self, connection, host):
+		xmlrpclib.Transport.send_host(self, connection, host)
+		self.send_basic_auth(connection)
+
 
 def clean_up():
 	'''
@@ -159,7 +179,7 @@ class process:
 		
 			#записываем html в файл
 			log.debug('Writing source file: %s' % os.path.join(source_folder, source_file_name))
-			file(os.path.join(source_folder, source_file_name), 'w').write(data)
+			file(os.path.join(source_folder, source_file_name), 'w').write(data.encode('utf8'))
 		
 			if params.is_img:
 				#качаем картинки
@@ -169,7 +189,7 @@ class process:
 		
 		
 		log.debug('Reading source file: %s' % os.path.join(source_folder, source_file_name))
-		data = file(os.path.join(source_folder, source_file_name)).read()
+		data = file(os.path.join(source_folder, source_file_name)).read().decode('utf8')
 		
 		#детектор языка
 		log.debug('Detecting language')
@@ -178,7 +198,7 @@ class process:
 		
 		#готовим параметры для преобразования html2fb2
 		h2fb_params = h2fb.default_params.copy()
-		h2fb_params['data'] = data
+		h2fb_params['data'] = data.encode('utf8')
 		h2fb_params['verbose'] = 1
 		h2fb_params['encoding-from'] = 'UTF-8'
 		h2fb_params['encoding-to'] = 'UTF-8'
@@ -385,8 +405,12 @@ class process_html:
 		sys.setrecursionlimit(40000)
 		
 		log.debug('Start recoding')
-		data = self.recoding(data)
+		data = self.decoding(data)
 		log.debug('End of recoding')
+		
+		log.debug('Start tidy')
+		data = self.tidy(data)
+		log.debug('End of tidy')
 		
 		if is_img:
 			log.debug('Start process images')
@@ -397,29 +421,37 @@ class process_html:
 		
 		return data, img_list
 	
-	def recoding(self, data):
+	def tidy(self, data):
+		#tidy - исправление ошибок html
+		#####
+		#логин, хост, пароль убрать в конфиг при рефакторинге
+		#####
+				
+		auth_tran = BasicHTTPAuthTransport()
+		auth_tran.credentials = ("admin", "password")
+		s = xmlrpclib.Server('http://62.205.172.4:8000', transport = auth_tran)
+		data = s.do_tidy(data)
+		return data
+	
+	def decoding(self, data):
 		'''
-		конвертируем в UTF-8
+		определяем кодировку файла и декодируем в юникод
 		'''
 		
 		tmp = chardet.detect(data) #определяем кодировку
 		
 		log.info('Detected encoding: %s' % (tmp))
 		
-		new_data = data.decode(tmp['encoding']).encode('UTF-8') #перекодируем в UTF8
+		new_data = data.decode(tmp['encoding'])
 		return  new_data
 	
 	def detect_lang(self, data):
 		#clear_data
 		soup = BeautifulSoup(data)
-		text = ''.join(soup.findAll(text = True)).encode('UTF-8')
-		#print '<pre>'
-		#print text.encode('UTF-8')
-		#print '</pre>'
+		text = ''.join(soup.findAll(text = True))
 		
-		#n = ngram._NGram()
 		l = ngram.NGram('lm')
-		return l.classify(text).split('.')[0]
+		return l.classify(text.encode('utf8')).split('.')[0]
 	
 	def process_images(self, data, source_folder, url):
 		'''
@@ -463,7 +495,7 @@ class process_html:
 				
 		log.info('%s images to download' % (len(imgs_list)))
 		
-		new_data = str(soup)
+		new_data = str(soup).decode('utf8') #после beatefulsoap приходится декодировать 
 		
 		return new_data, imgs_list
 	
