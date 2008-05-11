@@ -45,6 +45,16 @@ def draw_header():
 <div align="center">
 <h1>web2fb2</h1>
 <center>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-3495198-3");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 <input type="hidden" name="cmd" value="_s-xclick">
 <input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
@@ -53,7 +63,7 @@ def draw_header():
 ">
 </form>
 </center>
-<h3 style="color: red;">Attention! Service is in testing mode. For tests and development only.</h3>
+<h3 >Beta vertion.<br/> Please add bug (with URL and short description) <a href = 'http://trac2.assembla.com/web2fb2/newticket'>here.</a> </h3>
 	"""
 
 def draw_footer():
@@ -105,6 +115,12 @@ def draw_form():
           with images</td>
         <td></td>
       </tr>
+      <tr>
+        <td></td>
+        <td><input name="yah2fb" type="checkbox" value="1">
+          yet another h2fb engine</td>
+		<td></td>
+      </tr>	
     </table>
   </form>
 """
@@ -259,6 +275,8 @@ def main():
 	form = cgi.FieldStorage()
 	url = form.getvalue('url')
 	img = form.getvalue('img')
+	yah2fb = form.getvalue('yah2fb')
+	
 	set_descr = form.getvalue('set_descr') #флаг, что надо передается описание
 	
 	log.debug('Try to get url: %s' % url)
@@ -279,6 +297,7 @@ def main():
 			
 			params = process.web_params()
 			params.url = url
+			params.yah2fb = yah2fb
 			
 			log.info('Set descr for url %s' % url)
 			#заполняем описани
