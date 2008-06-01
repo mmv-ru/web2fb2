@@ -28,6 +28,11 @@ import yah2fb
 import fb_utils
 import img_download
 
+
+import html5lib
+from html5lib import treebuilders, treewalkers, serializer
+from html5lib.filters import sanitizer
+
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
 TEMP_PATH = "temp" #папка для временных файлов
 CLEAN_TIME = 900 #время, через которое будут удалятся старые ебуки
@@ -186,15 +191,11 @@ class process:
 				log.debug('Start image downloading')
 				imgs_down = img_download.download(imgs_list, source_folder, log)
 				log.debug('End of image downloading')
+				time.sleep(5)
 		
 		
 		log.debug('Reading source file: %s' % os.path.join(source_folder, source_file_name))
 		data = file(os.path.join(source_folder, source_file_name)).read().decode('utf8')
-		
-		#детектор языка
-		log.debug('Detecting language')
-		lang = process_html().detect_lang(data)
-		log.info('Detected language: %s', lang)
 		
 		#готовим параметры для преобразования html2fb2
 		h2fb_params = h2fb.default_params.copy()
@@ -202,7 +203,6 @@ class process:
 		h2fb_params['verbose'] = 1
 		h2fb_params['encoding-from'] = 'UTF-8'
 		h2fb_params['encoding-to'] = 'UTF-8'
-		h2fb_params['convert-images'] = 1
 		
 		if params.is_img:
 			h2fb_params['skip-images'] = 0
@@ -218,11 +218,26 @@ class process:
 			#детектор языка
 			log.debug('Detecting language')
 			descr.lang = process_html().detect_lang(data)
-			log.info('Detected language: %s', lang)
+			log.info('Detected language: %s', descr.lang)
 		
 		h2fb_params['descr'] = descr
 				
 		h2fb_params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
+		
+		
+		#генерим имя файла и папки для готовой книги
+		#имя папки с результатом - случайное
+		ebookz_folder_name = md5.new(str(random.random())).hexdigest()[:10]
+		log.debug('Generated ebookz folder name: %s' % (ebookz_folder_name))
+		
+		result_folder = os.path.join(EBOOKZ_PATH, ebookz_folder_name)
+		
+		ebook_stat.path = result_folder
+		
+		#создаем папку для готовой книги
+		os.mkdir(result_folder)
+		
+		h2fb_params['file_out'] = file(os.path.join(result_folder, 'tmp_ebook'), 'wb')
 		
 		#собственно преобразование
 		log.debug('Start h2fb process')
@@ -235,16 +250,9 @@ class process:
 			out_data = rez['data']
 			ebook_stat.descr = rez['descr']
 			
+		h2fb_params['file_out'].close()
+			
 		log.debug('End of h2fb process')
-		
-		#генерим имя файла и папки для готовой книги
-		#имя папки с результатом - случайное
-		ebookz_folder_name = md5.new(str(random.random())).hexdigest()[:10]
-		log.debug('Generated ebookz folder name: %s' % (ebookz_folder_name))
-		
-		result_folder = os.path.join(EBOOKZ_PATH, ebookz_folder_name)
-		
-		ebook_stat.path = result_folder
 		
 		#генерируем имя для получившегося файла
 		tmp_name = self.gen_name('_'.join(( ebook_stat.descr.author_last, ebook_stat.descr.author_first, ebook_stat.descr.title )))
@@ -254,30 +262,22 @@ class process:
 			file_name = urlparse.urlparse(params.url)[1][:48] + '.fb2'
 		log.debug('Generated file name: %s' % (file_name))
 		
-		#создаем папку для готовой книги
-		os.mkdir(result_folder)
+		os.rename(os.path.join(result_folder, 'tmp_ebook'), os.path.join(result_folder, file_name))
 		
 		#zip файл
 		if params.is_zip:
-			f = cStringIO.StringIO()
-			zp = zipfile.ZipFile(f, 'w')
+			zp = zipfile.ZipFile(os.path.join(result_folder, file_name + ".zip"), 'w')
 			
 			zip_info = zipfile.ZipInfo(file_name)
 			zip_info.date_time = time.localtime(time.time())[:6]
 			zip_info.compress_type = zipfile.ZIP_DEFLATED
 			
-			zp.writestr(zip_info, out_data)
+			zp.writestr(zip_info, file(os.path.join(result_folder, file_name), 'rb').read())
 			zp.close()
 			
-			out_data = f.getvalue()
-			f.close()
-			file_name += '.zip'
+			file_name = file_name + ".zip"
 		
 		ebook_stat.file_name  = file_name
-		
-		#записываем книгу
-		log.debug('Writing ebook: %s into: %s (ebook len: %s)' % (file_name, result_folder, len(out_data)))
-		file(os.path.join(result_folder, file_name), 'wb').write(out_data)
 		
 		ebook_stat.file_size = os.path.getsize(os.path.join(result_folder, file_name))    # размер файла в байтах
 		ebook_stat.work_time = time.time() - start_time, #размер книги в килобайтах
@@ -408,9 +408,13 @@ class process_html:
 		data = self.decoding(data)
 		log.debug('End of recoding')
 		
-		log.debug('Start tidy')
-		data = self.tidy(data)
-		log.debug('End of tidy')
+		#log.debug('Start tidy')
+		#data = self.tidy(data)
+		#log.debug('End of tidy')
+		
+		log.debug('Start correct')
+		data = self.correct(data)
+		log.debug('End of correct')
 		
 		if is_img:
 			log.debug('Start process images')
@@ -420,6 +424,21 @@ class process_html:
 			img_list = None
 		
 		return data, img_list
+	
+	def correct(self, data):
+		p = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("simpletree"))
+		dom_tree = p.parse(data)
+		walker = treewalkers.getTreeWalker("simpletree")
+		stream = walker(dom_tree)
+		s = serializer.htmlserializer.HTMLSerializer(omit_optional_tags=False, quote_attr_values = True)
+		output_generator = s.serialize(stream)
+		
+		out_data = u''
+		for item in output_generator:
+			out_data += item
+		
+		return out_data
+		
 	
 	def tidy(self, data):
 		#tidy - исправление ошибок html
@@ -480,19 +499,20 @@ class process_html:
 		log.info('Find %s images' % (len(img_tags)))
 		
 		for img_tag in img_tags:
-			if img_tag['src']:
+			if img_tag.get('src', None):
 				#делаем абсолютный урл
 				new_url = urlparse.urljoin(base_url, img_tag['src'])
 				
-				#генерим имя картинки
-				img_name = md5.new(str(random.random())).hexdigest()[:10]
-				
-				#заносим в словарь урл и имя файла
-				imgs_list[new_url] = img_name
+				if new_url in imgs_list:
+					img_name = imgs_list[new_url]
+				else:
+					#генерим имя картинки
+					img_name = md5.new(str(random.random())).hexdigest()[:10]				
+					#заносим в словарь урл и имя файла
+					imgs_list[new_url] = img_name
 				
 				# меняем ссылку на путь + имя файла
-				img_tag['src'] = source_folder + '/' + img_name
-				
+				img_tag['src'] = os.path.join(source_folder, img_name)
 		log.info('%s images to download' % (len(imgs_list)))
 		
 		new_data = str(soup).decode('utf8') #после beatefulsoap приходится декодировать 

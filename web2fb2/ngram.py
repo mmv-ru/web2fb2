@@ -127,7 +127,7 @@ class NGram:
 				if not line:
 					continue				
 				
-				parts = line[:-1].split('\t')
+				parts = line.split('\t')
 				if len(parts) != 2:
 					raise ValueError("invalid language file %s line : %s" % (fname,parts))
 				try:
@@ -197,8 +197,8 @@ if __name__ == '__main__':
 	#conf = Generate('/tmp')
 	#conf.save('/tmp')
 
-	text = sys.stdin.readline()
-	n = _NGram()
+	#text = sys.stdin.readline()
+	#n = _NGram()
 
-	l = NGram('/where/your/.lm/files/are')
-	print l.classify(text)
+	#l = NGram('/where/your/.lm/files/are')
+	#print l.classify(text)

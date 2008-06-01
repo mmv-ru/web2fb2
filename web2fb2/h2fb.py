@@ -5,29 +5,7 @@
 """
 HTML to FictionBook converter.
 
-Usage: %prog [options] args
-    -i, --input-file=FILENAME: (*.html|*.htm|*.html|*.*) Input file name, defaults to stdin if omitted.
-    -o, --output-file=FILENAME: (*.fb2|*.*) Output file name, defaults to stdin if omitted.
-    -f, --encoding-from=ENCODING_NAME:  Source encoding, autodetect if omitted.
-    -t, --encoding-to=ENCODING_NAME DEFAULT=Windows-1251:    Result encoding(Windows-1251)
-    -r,  --header-re=REGEX:         Regular expression for headers detection('')
-    --not-convert-quotes:     Not convert quotes
-    --not-convert-hyphen:     Not convert hyphen
-    --skip-images:            Skip images, i.e. if specified do NOT include images. Default is to include images/pictures
-    --not-convert-images:     Do not convert images to PNG, i.e. if specified keep images as original types. By default ALL in-line images are converted to PNG format.
-    --skip-ext-links:         Skip external links
-    --allow-empty-lines:      Allow generate tags <empty-line/>
-    --not-detect-italic:      Not detect italc
-    --not-detect-headers:     Not detect sections headers
-    --not-detect-epigraphs:   Not detect epigraphs
-    --not-detect-paragraphs:  Not detect paragraphs
-    --not-detect-annot:       Not detect annotation
-    --not-detect-verses:      Not detect verses
-    --not-detect-notes:       Not detect notes
-    -v,--verbose=INT:         Debug
 """
-
-####
 
 """
 Chris TODO
@@ -72,19 +50,12 @@ import tempfile
 import os
 import base64
 import time
-import mimetypes
 import urllib
 import locale
-import fb_utils 
-import random
-
-try:
-    #raise ImportError
-    import optionparse
-    have_optparse = True
-except ImportError:
-    have_optparse = False
-
+import shutil
+import cStringIO
+import fb_utils
+import time
 
 version='0.1.1'
 
@@ -247,42 +218,26 @@ _TAGS={
     'epigraph'    : _TAG_ID,
     }
 
-try:
-    import wx
-    _IMG_LIB='wxPython'
-    
-    def convert2png(filename):
-        if wx.GetApp() is None:
-            _app = wx.PySimpleApp()
-        retv=''
-        img = wx.Bitmap(filename, wx.BITMAP_TYPE_ANY)
-        if img.Ok():
-            img = wx.ImageFromBitmap(img)
-            of= tempfile.mktemp()
-            if img.SaveFile(of, wx.BITMAP_TYPE_PNG):
-                retv=open(of, 'rb').read()
-            os.unlink(of)
-        return retv
-except ImportError:
-    try:    
-        from PIL import Image
-        _IMG_LIB='PIL'
-        
-        def convert2png(filename):
-            retv = ''
-            try:
-                of = tempfile.mktemp()
-                Image.open(filename).save(of,'PNG')
-                retv=open(of, 'rb').read()
-                os.unlink(of)
-            except:
-                pass
-            return retv
-    except ImportError:
-        _IMG_LIB='None'
-        convert2png = None
+   
+from PIL import Image
 
-mimetypes.init()
+
+
+class binary(object):
+    def __init__(self):
+        self.f = os.tmpfile()
+        self.ids = []
+        
+    def get(self):
+        self.f.seek(0)
+        return self.f
+    
+    def add(self, type, id, data):
+        if id not in self.ids:
+            self.f.write('<binary content-type="%s" id="%s">' % (type, id))
+            self.f.write(base64.encodestring(data))
+            self.f.write('</binary>\n')
+            self.ids.append(id)
 
 
 class MyHTMLParser(SGMLParser):
@@ -313,7 +268,6 @@ class MyHTMLParser(SGMLParser):
         self.nextid=1                   # next note id
         self.notes=[]                   # notes
         self.descr={}                   # description
-        self.bins=[]                    # images (binary objects)
         self.informer=None              # informer (for out messages)
         self.rez_descr = fb_utils.description()
         
@@ -334,10 +288,11 @@ class MyHTMLParser(SGMLParser):
         '''Main processing method. Process all data '''
         self.params=params
         self._TAGS = _TAGS
+        
+        self.binary = binary()
+        
         if 'informer' in params:
             self.informer=params['informer']
-        if params['convert-images'] != 0 and convert2png is None:
-            raise(RuntimeError, 'convert to png requested but no image libraries are available')
             
         if self.params['convert-span-to'] == 'emphasis' or self.params['convert-span-to'] == 'em':
             self.params['convert-span-to'] == 'em'
@@ -376,19 +331,38 @@ class MyHTMLParser(SGMLParser):
         self.post_process()
         self.msg('Building result document...\n')
                    
-        self.out= ('<?xml version="1.0" encoding="%s"?>\n' \
+        out = ('<?xml version="1.0" encoding="%s"?>\n' \
                    '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
                    self.params['encoding-to'] + \
                    self.make_description() + \
                     '<body>\n%s\n</body>\n' % self.out + \
-                    self.make_notes() + \
-                    self.make_bins() + '</FictionBook>')
+                    self.make_notes())
+        
+        out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", out)
+        out = out.encode(self.params['encoding-to'],'xmlcharrefreplace')
+        
+        params['file_out'].write(out)
+        
+        shutil.copyfileobj(self.binary.get(), params['file_out'])
+        #params['file_out'].write(self.binary.get())
+        
+        params['file_out'].write('</FictionBook>')
+        
+        
+        
+        #self.out= ('<?xml version="1.0" encoding="%s"?>\n' \
+        #           '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
+        #           self.params['encoding-to'] + \
+        #           self.make_description() + \
+        #            '<body>\n%s\n</body>\n' % self.out + \
+        #            self.make_notes() + \
+        #            self.binary.get() + '</FictionBook>')
         
         #bad! very bad!
-        self.out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", self.out)
+        #self.out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", self.out)
         
         
-        self.out = self.out.encode(self.params['encoding-to'],'xmlcharrefreplace')
+        #self.out = self.out.encode(self.params['encoding-to'],'xmlcharrefreplace')
         
         #self.out = (self.make_description() + \
         #            '<body>%s</body>' % self.out + \
@@ -404,7 +378,7 @@ class MyHTMLParser(SGMLParser):
         #self.out += '</FictionBook>'
         
         self.msg("Total process time is %.2f secs\n" % (time.time() - secs))
-        return self.out
+        return True
         
     # --- Tag handling, need for parsing
     
@@ -591,20 +565,23 @@ class MyHTMLParser(SGMLParser):
         self.mark_start_tag('p')
 
     def do_img(self, attrs):
+        time.sleep(0.005)
         ''' Handle images '''
         if self.params['skip-images']:
             return
+            
         src = None
         for attrname, value in attrs:
             if attrname == 'src':
                 src = value
         temp_image_filename=urllib.unquote(src)
-        mime_type, data = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
-        if data:
+        img = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
+        
+        if img:
             self.end_paragraph()
             src=os.path.basename(src)
             self.out.append(self.tag_repr('image', [('xlink:href','#'+src)], True))
-            self.bins.append((mime_type, src, data))
+            self.binary.add('image/%s' % img['type'], src, img['data'])
 
     def report_unbalanced(self, tag):
         ''' Handle unbalansed close tags'''
@@ -804,7 +781,9 @@ class MyHTMLParser(SGMLParser):
         
         #join with dont use newline in <p> and <v> tags
         out_tmp = ''
+        
         for i in xrange(len(self.out)):
+            time.sleep(0.005)
             is_new_line = True
 
             if i >= (len(self.out) -1 ):
@@ -818,7 +797,7 @@ class MyHTMLParser(SGMLParser):
                 out_tmp += self.out[i] + '\n'
             else:
                 out_tmp += self.out[i]
-            
+
         self.out = out_tmp. \
              replace(_CH_REPL_AMP, '&amp;'). \
              replace(_CH_REPL_LT,'&lt;').    \
@@ -1311,14 +1290,6 @@ class MyHTMLParser(SGMLParser):
         retv=['<section id="FictionBookId%s"><title><p>note %s</p></title>%s</section>' %
               (x,x,y) for x,y in self.notes]
         return '<body name="notes"><title><p>Notes</p></title>'+''.join(retv)+'</body>'
-       
-    def make_bins(self):
-        if not self.bins:
-            return ''
-        #return ''.join(['<binary content-type="image/jpeg" id="%s">%s</binary>' % \
-        #(x.encode(self.params['encoding-to'],'xmlcharrefreplace'),y) for x,y in self.bins])
-        return ''.join(['<binary content-type="%s" id="%s">%s</binary>' % \
-                        (mime_type, x,y) for mime_type, x,y in self.bins])
 
     # --- Auxiliary  methods
     
@@ -1367,52 +1338,40 @@ class MyHTMLParser(SGMLParser):
                 print i.encode('koi8-r','replace')
 
     def convert_image(self, filename):
-        mime_type=mimetypes.guess_type(filename)[0]
-        image_filename = os.path.join(self.source_directoryname, filename)
-        ## note if mime_type is None, unable to determine type....
-        if not self.params['convert-images']:
-            f=open(image_filename, 'rb')
-            data = f.read()
-            f.close()
-        else:
-            data = convert2png(image_filename)
-            mime_type='image/png'
-        if data:
-            data=base64.encodestring(data)
-        return mime_type, data
+        
+        src = os.path.join(self.source_directoryname, filename)
+        
+        try:
+            im = Image.open(src)
+        except IOError:
+            return None
+        
+        if im.format == 'GIF':
+            f = cStringIO.StringIO()
+            im.save(f, "PNG")
+            return {'data':f.getvalue(), 'type':'png'}
+            
+        elif im.format == 'PNG':
+            try:
+                data = open(src, 'rb').read()
+            except IOError:
+                return None
+            else:
+                return {'data':data, 'type':'png'}
+            
+        elif im.format == 'JPEG':
+            try:
+                data = open(src, 'rb').read()
+            except IOError:
+                return None
+            else:
+                return {'data':data, 'type':'jpg'}
+            
+        return None
+        
         
     def get_descr(self):
         return self.rez_descr
-
-
-def usage():
-    print '''
-HTML to FictionBook converter, ver. %s
-Usage: h2fb.py [options]
-where options is:
-    -i, --input-file         Input file name(stdin)
-    -o, --output-file        Output file name(stdout)
-    -f, --encoding-from      Source encoding(autodetect)
-    -t, --encoding-to        Result encoding(Windows-1251)
-    -h, --help               This help
-    -r,  --header-re         Regular expression for headers detection('')
-    --not-convert-quotes     Not convert quotes
-    --not-convert-hyphen     Not convert hyphen
-    --skip-images            Skip messages
-    --skip-ext-links         Skip external links
-    --allow-empty-lines      Allow generate tags <empty-line/>
-    --not-detect-italic      Not detect italc
-    --not-detect-headers     Not detect sections headers
-    --not-detect-epigraphs   Not detect epigraphs
-    --not-detect-paragraphs  Not detect paragraphs
-    --not-detect-annot       Not detect annotation
-    --not-detect-verses      Not detect verses
-    --not-detect-notes       Not detect notes
-    --title                  Title
-    --author-first           Author first name
-    --author-middle          Author middle name
-    --author-last            Author last name
-''' % version
 
 
 # FIXME TODO, the try block is broken
@@ -1441,125 +1400,8 @@ default_params = {
     'detect-verses'     : 1,        # Detect verses
     'detect-notes'      : 1,        # Detect notes ([note here] or {note here})
     'verbose'           : 1,        # Verbose level
-    'convert-images'    : 1,        # Force convert of images to png or not
     'sys-encoding': sys_encoding,
     'informer': sys.stderr.write,
     'convert-span-to': None, # what to convert span tags to, if set to 'em' or 'emphasis' converts spans to 'emphasis', if 'strong' converts to 'strong', anything else is ignored/skipped/removed (silently)
     'descr': None
     }
-
-
-def convert_to_fb(opts):
-    import getopt
-        
-    in_file=sys.stdin
-    out_file=sys.stdout
-    params = default_params.copy()
-
-    if have_optparse:
-        argv = sys.argv
-        opt, args = optionparse.parse(__doc__, argv[1:])
-        
-        # 2 phase dictionary construction
-        opt_dict={}
-        # convert underscores to hypens,
-        # e.g. "option_something" in to "option-something" (which h2fb expects)
-        for temp_param in dir(opt):
-            temp_value = getattr(opt, temp_param)
-            if not temp_param.startswith('_') and not callable(temp_value):
-                temp_key = temp_param.replace('_', '-') ## horrible hack! as "-" where turned into '_' in the argument processor
-                if isinstance(temp_value, unicode):
-                    temp_value=str(temp_value)
-                opt_dict[temp_key] = temp_value
-        # create opts array/list informat that it already expects
-        opts=[]
-        for temp_param in opt_dict:
-            if opt_dict[temp_param] is not None:
-                opts.append(('--'+temp_param, opt_dict[temp_param]))
-    else:
-        try:
-            opts, args = getopt.getopt(opts,
-                                       "i:o:f:t:hv:r:",
-                                       ['input-file=',
-                                        'output-file=',
-                                        'encoding-from=',
-                                        'encoding-to=',
-                                        'help',
-                                        'verbose=',
-                                        'not-convert-quotes',
-                                        'header-re=',
-                                        'skip-images',
-                                        'skip-ext-links',
-                                        'allow-empty-lines',
-                                        'not-detect-italic',
-                                        'not-detect-headers',
-                                        'not-detect-epigraphs',
-                                        'not-detect-paragraphs',
-                                        'not-detect-annot',
-                                        'not-detect-verses',
-                                        'not-detect-notes',
-                                        'not-convert-images',
-                                        'not-convert-hyphen'
-                                        ]
-                                       )
-        except getopt.GetoptError:
-            usage()
-            return
-    for opt, val in opts:
-        if opt in ('-i','--input-file'):
-            params['file-name']=val
-            in_file = open(params['file-name'], 'rb')
-        elif opt in ('-o','--output-file'):
-            out_file = open(val, 'w')
-        elif opt in ('-f','--encoding-from'):
-            params['encoding-from']=val
-        elif opt in ('-t','--encoding-to'):
-            params['encoding-to']=val
-        elif opt in ('-h','--help'):
-            usage()
-            return
-        elif opt in ('--not-convert-quotes',):
-            params['convert-quotes']=0
-        elif opt in ('-r', '--header-re'):
-            params['header-re']=unicode(val, sys_encoding)
-        elif opt in ('--skip-images',):
-            params['skip-images']=1
-        elif opt in ('--skip-ext-links',):
-            params['skip-ext-links']=1
-        elif opt in ('--allow-empty-lines',):
-            params['skip-empty-lines']=0
-        elif opt in ('--not-detect-italic',):
-            params['detect-italic']=0
-        elif opt in ('--not-detect-headers',):
-            params['detect-headers']=0
-        elif opt in ('--not-detect-epigraphs',):
-            params['detect-epigraphs']=0
-        elif opt in ('--not-detect-paragraphs',):
-            params['detect-paragraphs']=0
-        elif opt in ('--not-detect-annot',):
-            params['detext-annot']=0
-        elif opt in ('--not-detect-verses',):
-            params['detect-verses']=0
-        elif opt in ('--not-detect-notes',):
-            params['detect-notes']=0
-        elif opt in ('--not-convert-images',):
-            params['convert-images']=0
-        elif opt in ('--not-convert-hyphen',):
-            params['convert-hyphen']=0
-        elif opt in ('-v','--verbose',):
-            params['verbose']=int(val)
-        
-    params['data'] = in_file.read()
-    in_file.close()
-    mp = MyHTMLParser()
-    data=mp.process(params)
-    out_file.write(data)
-    out_file.close()
-    #print mp.get_descr()
-
-
-if __name__=='__main__':
-    if sys.version_info[0] < 2 or sys.version_info[1] < 3:
-        sys.stderr.write('Python 2.3 or newer it is necessary for start of the program.\n')
-    else:
-        convert_to_fb(sys.argv[1:])

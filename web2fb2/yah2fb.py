@@ -7,6 +7,8 @@ import re
 import urllib
 import os.path
 import base64
+import os
+import shutil
 from PIL import Image
 import cStringIO
 
@@ -14,11 +16,12 @@ import fb_utils
 
 class binary(object):
 	def __init__(self):
-		self.f = cStringIO.StringIO()
+		self.f = os.tmpfile()
 		self.ids = []
 		
 	def get(self):
-		return self.f.getvalue()
+		self.f.seek(0)
+		return self.f
 	
 	def add(self, type, id, data):
 		if id not in self.ids:
@@ -28,7 +31,9 @@ class binary(object):
 			self.ids.append(id)
 
 class fb2(object):
-	def __init__(self):
+	def __init__(self, f_out):
+		
+		self.f_out = f_out
 		self.FB_TAGS = ['section', 'title', 'p']
 		self.cr_tags = ['p']
 
@@ -50,9 +55,11 @@ class fb2(object):
 		
 		data = data.encode('utf8')
 		
-		data += self.binary.get()
+		self.f_out.write(data)
+		shutil.copyfileobj(self.binary.get(), self.f_out)
+		#self.f_out.write(self.binary.get())
+		self.f_out.write('</FictionBook>'.encode('utf8'))
 		
-		data += '</FictionBook>'.encode('utf8')
 		
 		return data#.encode('utf8')
 	
@@ -155,7 +162,7 @@ class html2fb2(object):
 		rez = {}
 		
 		self.params = params
-		self.fb2 = fb2()
+		self.fb2 = fb2(self.params['file_out'])
 		
 		self.soup = BeautifulSoup(params['data'])
 		
