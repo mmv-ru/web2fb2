@@ -10,6 +10,7 @@ import logging.handlers
 from string import Template
 import os
 
+#jou
 #настраиваем главный логгер
 handler = logging.handlers.RotatingFileHandler('web2fb2.log', maxBytes = 1000000, backupCount = 1)
 handler.setFormatter(logging.Formatter('%(asctime)s %(name)-24s %(levelname)-8s %(message)s'))
