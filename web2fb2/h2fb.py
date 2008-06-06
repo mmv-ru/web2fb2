@@ -574,14 +574,15 @@ class MyHTMLParser(SGMLParser):
         for attrname, value in attrs:
             if attrname == 'src':
                 src = value
-        temp_image_filename=urllib.unquote(src)
-        img = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
+        if src:
+            temp_image_filename=urllib.unquote(src)
+            img = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
         
-        if img:
-            self.end_paragraph()
-            src=os.path.basename(src)
-            self.out.append(self.tag_repr('image', [('xlink:href','#'+src)], True))
-            self.binary.add('image/%s' % img['type'], src, img['data'])
+            if img:
+                self.end_paragraph()
+                src=os.path.basename(src)
+                self.out.append(self.tag_repr('image', [('xlink:href','#'+src)], True))
+                self.binary.add('image/%s' % img['type'], src, img['data'])
 
     def report_unbalanced(self, tag):
         ''' Handle unbalansed close tags'''
