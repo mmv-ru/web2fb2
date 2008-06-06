@@ -1,0 +1,23 @@
+$def with (url, work_time, is_images, file_url, file_name, file_size)
+<table>
+  <tr>
+    <td>&nbsp;</td>
+    <td>
+	  <div align='center'  style = 'position: relative; border: 1px dotted #999999; padding: 3px; font-size:13px; text-align: left;'>
+	    Generated from <i><a href = '$url'>$url</a></i> 
+$if is_images:
+	with images
+$else:
+	without images
+
+		<br/>
+        Generating time: $work_time sec<br/>
+      </div>
+	</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<br />
+<br />
+<b>Download link:</b><a href = '$file_url'>$file_name</a> - $file_size KB <br />
+<br />

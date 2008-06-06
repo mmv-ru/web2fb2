@@ -1,0 +1,67 @@
+$def with (title, author_first, author_middle, author_last, genres, cur_genre, lang, is_images, url)
+
+<br />
+<table>
+  <tr>
+    <td>&nbsp;</td>
+    <td><div style="position:relative; border: 1px solid #000000;">
+        <center>
+          <strong>Check description. If wrong fill in as you think fit.</strong>
+        </center>
+        <form method="get" action="">
+          <table>
+            <tr>
+              <td>Title:</td>
+              <td colspan="3"><input type="text" name="title" size="75" maxlength="256" value = '$title' /></td>
+            </tr>
+            <tr>
+              <td>Author:</td>
+              <td><input type="text" name="author_first" size="25" maxlength="256" value = '$author_first'/>
+                <br />
+                <label style="font-size:x-small">first name</label></td>
+              <td><input type="text" name="author_middle" size="25" maxlength="256" value = '$author_middle' />
+                <br />
+                <label style="font-size:x-small">middle name</label></td>
+              <td><input type="text" name="author_last"  size="25" maxlength="256" value = '$author_last' />
+                <br />
+                <label style="font-size:x-small">last name</label></td>
+            </tr>
+            <tr>
+              <td>Genre</td>
+              <td colspan="2">
+                <select name="genre">
+$for genre in genres:
+    $if genre[0] == '':
+        <optgroup label="$genre[1]">
+    $elif genre[0] == cur_genre:
+        <option value="$genre[0]" selected='selected'>$genre[1]</option>
+    $else:
+        <option value="$genre[0]">$genre[1]</option>
+
+                </select>
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Language:</td>
+              <td align="left"><input type="text" name="lang" size="2" maxlength="2" value = '$lang' /></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td align="right"><input type="submit" value = "Apply"/></td>
+            </tr>
+          </table>
+          <input name="set_descr" type="hidden" value="True">
+          <input name="url" type="hidden" value="$url">
+$if is_images:
+          <input name="img" type="hidden" value="True">
+
+        </form>
+      </div></td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
