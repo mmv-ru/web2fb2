@@ -18,7 +18,8 @@ class description(object):
 
 class genres(object):
     def __init__(self):
-        self.genres = ['SF, Fantasy',
+        self.genres = [
+         ('', 'SF, Fantasy'),
          ('sf_history', 'Alternative history'),
          ('sf_action', 'Action SF'),
          ('sf_epic', 'Epic SF'),
@@ -33,7 +34,7 @@ class genres(object):
          ('sf', 'Science Fiction'),
          ('child_sf', 'Science Fiction for Kids'),
          ('love_sf', 'Love'),
-         'Detectives, Thrillers',
+         ('', 'Detectives, Thrillers'),
          ('det_classic', 'Classical Detective'),
          ('det_police', 'Police Stories'),
          ('det_action', 'Action'),
@@ -49,7 +50,7 @@ class genres(object):
          ('sf_detective', 'Detective SF'),
          ('child_det', 'Detectives & Thrillers'),
          ('love_detective', 'Detective Romance'),
-         'Prose',
+         ('', 'Prose'),
          ('prose_classic', 'Classics Prose'),
          ('prose_history', 'Historical Prose'),
          ('prose_contemporary', 'Contemporary Prose'),
@@ -59,14 +60,14 @@ class genres(object):
          ('prose_military', 'Military'),
          ('humor_prose', 'Humor Prose'),
          ('child_prose', 'Prose'),
-         'Romance',
+         ('', 'Romance'),
          ('love_contemporary', 'Contemporary Romance'),
          ('love_history', 'Historical Romance'),
          ('love_detective', 'Detective Romance'),
          ('love_short', 'Short Romance'),
          ('love_erotica', 'Erotica'),
          ('love_sf', 'Science Fiction'),
-         'Adventure',
+         ('', 'Adventure'),
          ('adv_western', 'Western'),
          ('adv_history', 'History'),
          ('adv_indian', 'Indians'),
@@ -75,7 +76,7 @@ class genres(object):
          ('adv_animal', 'Nature & Animals'),
          ('adventure', 'Misk Adventures'),
          ('child_adv', 'Adventures for Kids'),
-         "Children's",
+         ('', "Children's"),
          ('child_tale', 'Fairy Tales'),
          ('child_verse', 'Verses'),
          ('child_prose', 'Prose for Kids'),
@@ -84,19 +85,19 @@ class genres(object):
          ('child_adv', 'Adventures for Kids'),
          ('child_education', 'Education for Kids'),
          ('children', 'For Kids: Misk'),
-         'Poetry, Dramaturgy',
+         ('', 'Poetry, Dramaturgy'),
          ('poetry', 'Poetry'),
          ('dramaturgy', 'Dramaturgy'),
          ('humor_verse', 'Humor Verses'),
          ('child_verse', 'Verses'),
-         'Antique',
+         ('', 'Antique'),
          ('antique_ant', 'Antique Literature'),
          ('antique_european', 'European Literature'),
          ('antique_russian', 'Antique Russian Literature'),
          ('antique_east', 'Antique East Literature'),
          ('antique_myths', 'Myths. Legends. Epos'),
          ('antique', 'Other Antique'),
-         'Science, Education',
+         ('', 'Science, Education'),
          ('sci_history', 'History'),
          ('sci_psychology', 'Psychology'),
          ('sci_culture', 'Cultural Science'),
@@ -113,7 +114,7 @@ class genres(object):
          ('sci_tech', 'Technical'),
          ('science', 'Misk Science, Education'),
          ('adv_animal', 'Nature & Animals'),
-         'Computers',
+         ('', 'Computers'),
          ('comp_www', 'Internet'),
          ('comp_programming', 'Programming'),
          ('comp_hard', 'Hardware'),
@@ -121,31 +122,31 @@ class genres(object):
          ('comp_db', 'Databases'),
          ('comp_osnet', 'OS & Networking'),
          ('computers', 'Computers: Misk'),
-         'Reference',
+         ('', 'Reference'),
          ('ref_encyc', 'Encyclopedias'),
          ('ref_dict', 'Dictionaries'),
          ('ref_ref', 'Reference'),
          ('ref_guide', 'Guidebooks'),
          ('reference', 'Misk References'),
-         'Nonfiction',
+         ('', 'Nonfiction'),
          ('nonf_biography', 'Biography & Memoirs'),
          ('nonf_publicism', 'Publicism'),
          ('nonf_criticism', 'Criticism'),
          ('nonfiction', 'Misk Nonfiction'),
          ('design', 'Art, Design'),
          ('adv_animal', 'Nature & Animals'),
-         'Religion',
+         ('', 'Religion'),
          ('religion_rel', 'Religion'),
          ('religion_esoterics', 'Esoterics'),
          ('religion_self', 'Self-perfection'),
          ('religion', 'Religion: Other'),
          ('sci_religion', 'Religious Studies'),
-         'Humor',
+         ('', 'Humor'),
          ('humor_anecdote', 'Anecdote'),
          ('humor_prose', 'Humor Prose'),
          ('humor_verse', 'Humor Verses'),
          ('humor', 'Misk Humor'),
-         'Home, Family',
+         ('', 'Home, Family'),
          ('home_cooking', 'Cooking'),
          ('home_pets', 'Pets'),
          ('home_crafts', 'Hobbies & Crafts'),
@@ -156,7 +157,7 @@ class genres(object):
          ('home_sport', 'Sports'),
          ('home_sex', 'Erotica, Sex'),
          ('home', 'Home: Other'),
-         'Economy, Business',
+         ('', 'Economy, Business'),
          ('job_hunting', 'Job Hunting'),
          ('management', 'Management'),
          ('marketing', 'Marketing'),
@@ -175,7 +176,7 @@ class genres(object):
          ('economics_ref', 'Economics Reference Book')]
 
     def get_genres(self):
-        return [genre[0] for genre in self.genres if not isinstance(genre, basestring) ]
+        return [genre[0] for genre in self.genres if genre[0] != '']
     
     def get_default(self):
         return 'reference'
@@ -184,6 +185,6 @@ class genres(object):
         return self.genres
 
 if __name__ == '__main__':
-    print genres().get_all_genres()
+    print genres().get_genres()
     
     

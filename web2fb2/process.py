@@ -127,7 +127,7 @@ class process:
 		log.debug('Checking url')
 		if not params.url:
 			log.warning('Bad url')
-			return (0, bad_url)
+			return (0, 'bad_url')
 		
 		ebook_stat = ebook_stat_()
 		ebook_stat.url = params.url
@@ -513,6 +513,8 @@ class process_html:
 				
 				# меняем ссылку на путь + имя файла
 				img_tag['src'] = os.path.join(source_folder, img_name)
+
+				
 		log.info('%s images to download' % (len(imgs_list)))
 		
 		new_data = str(soup).decode('utf8') #после beatefulsoap приходится декодировать 

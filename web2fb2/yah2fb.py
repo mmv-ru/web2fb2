@@ -257,7 +257,7 @@ class html2fb2(object):
 						
 					elif tag.name == 'img':
 						if not self.params['skip-images']:
-							src = tag['src']
+							src = tag.get('src', None)
 							if src:
 								self.fb2.add_img(urllib.unquote(src))
 					
