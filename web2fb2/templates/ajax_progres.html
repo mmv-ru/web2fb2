@@ -1,0 +1,11 @@
+$def with (msgs, level, levels)
+
+<table>
+$for i in levels:
+	$if level > i:
+		<tr><td><img src = "/misc/done.gif" /></td><td>$msgs[i]</td></tr>
+	$elif level == i:
+		<tr><td><img src = "/misc/progress.gif" /></td></td><td>$msgs[i]</td></tr>
+	$else:
+		<tr><td><img src = "/misc/blank.gif" /></td><td>$msgs[i]</td></tr>
+</table>

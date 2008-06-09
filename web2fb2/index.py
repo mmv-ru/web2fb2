@@ -5,21 +5,13 @@ import cgi, cgitb
 cgitb.enable()
 import traceback
 
-import logging
-import logging.handlers
+import log
 from string import Template
 import os
 
 import web.template
 render = web.template.render('templates/')
 
-
-#настраиваем главный логгер
-handler = logging.handlers.RotatingFileHandler('web2fb2.log', maxBytes = 1000000, backupCount = 1)
-handler.setFormatter(logging.Formatter('%(asctime)s %(name)-24s %(levelname)-8s %(message)s'))
-log = logging.root
-log.addHandler(handler)
-log.setLevel(logging.DEBUG)
 
 import process
 import sessions
@@ -30,18 +22,17 @@ def main():
 	log.info('Start web')
 	
 	print "Content-Type: text/html; charset=UTF-8\n"
-
+	
 	log.debug('Cleaning up')
 	try:
 		process.clean_up() #уборка территорий
 	except:
 		log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 
+
 	#пытаемся получить получить переменные из формы
 	form = cgi.FieldStorage()
 	url = form.getvalue('url')
-	img = form.getvalue('img')
-	yah2fb = form.getvalue('yah2fb')
 	
 	set_descr = form.getvalue('set_descr') #флаг, что надо передается описание
 	
@@ -62,8 +53,13 @@ def main():
 			log.info('Yes! new session')
 			
 			params = process.web_params()
-			params.url = url
-			params.yah2fb = yah2fb
+			params.url = form.getvalue('url', '')
+			
+			if form.getvalue('img', False):
+				params.is_img = True
+			
+			if form.getvalue('yah2fb', False):
+				params.yah2fb = True
 			
 			log.info('Set descr for url %s' % url)
 			#заполняем описани
@@ -86,37 +82,26 @@ def main():
 				descr.genre = descr.SELFDETECT
 				descr.lang = descr.SELFDETECT
 				
-			descr.url = url
+			descr.url = params.url
 				
 			params.descr = descr
 			
-			#работаем с картинками или без
-			if img:
-				params.is_img = True # с картинками
-				log.info('With images. for url: %s' % url)
-			else:
-				params.is_img = False # без картинок
-				log.info('Without images. for url: %s' % url)
-
 			#запускаем сам процесс, перехватываем все неперехваченые ошибки в лог
 			log.debug('url: %s Start process' % url)
 			try:
-				rez = process.process().do_web(params)
+				progres = process.do(params)
 			except:
 				log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
-				print render.base( render.simple_error('Internal error') )
+				print render.simple_base( render.simple_error('Internal error') )
 		
 			else:
 				log.debug('url: %s Stop process' % url)
-				if rez[0] == 0:
-					log.warning('url: %s Process return error' % (rez, ))
-					print render.simple_base(
-						render.simple_error('Internal error' + rez[1]) + render.simple_form()
-					)
-				elif rez[0] == 1:
-					stat = rez[1]
-					#log.info('url: %s Stat: %s' % (url, stat))
-					log.info('url: %s Draw result: %s' % (url, stat.path_with_file))
+				
+				if progres.error:
+					print render.simple_base( render.simple_error(str(progres.error)) )
+				elif progres.done:
+					stat = progres.done
+				
 					result_html = render.simple_result(
 						stat.url,
 						'%.1f' % stat.work_time,

@@ -575,7 +575,7 @@ class MyHTMLParser(SGMLParser):
             if attrname == 'src':
                 src = value
         if src:
-            temp_image_filename=urllib.unquote(src)
+            temp_image_filename= os.path.join(self.params['source_file_path'], urllib.unquote(src))
             img = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
         
             if img:
@@ -1273,8 +1273,8 @@ class MyHTMLParser(SGMLParser):
         retv += '<author><nickname></nickname></author>\n'
         if self.params['descr'].program_info != None:
             retv += '<program-used>%s</program-used>\n' % self.params['descr'].program_used
-        retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
-        #retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
+        #retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
+        retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
         if self.params['descr'].src_url != None:
             retv += '<src-url>%s</src-url>\n' % self.params['descr'].url
         retv += '<id>%s</id>\n' % self.params['descr'].id

@@ -13,6 +13,15 @@ from PIL import Image
 import cStringIO
 
 import fb_utils
+import log
+
+class params_(object):
+	def __init__(self):
+		self.file_out = None
+		self.source_file_path = ''
+		self.data = None
+		self.descr = None
+		self.skip_images = None
 
 class binary(object):
 	def __init__(self):
@@ -83,7 +92,8 @@ class fb2(object):
 		self.description += '<author><nickname></nickname></author>\n'
 		if descr.program_info != None:
 			self.description += '<program-used>%s</program-used>\n' % descr.program_used
-		self.description += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
+		self.description += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
+		
 		#rez += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
 		
 		if descr.src_url != None:
@@ -162,14 +172,14 @@ class html2fb2(object):
 		rez = {}
 		
 		self.params = params
-		self.fb2 = fb2(self.params['file_out'])
+		self.fb2 = fb2(self.params.file_out)
 		
-		self.soup = BeautifulSoup(params['data'])
+		self.soup = BeautifulSoup(self.params.data)
 		
 		#
 		#fill description
 		#
-		descr = params['descr']
+		descr = self.params.descr
 		#title
 		if descr.title == descr.SELFDETECT:
 			try:
@@ -256,10 +266,10 @@ class html2fb2(object):
 						self.fb2.end_tag('title')
 						
 					elif tag.name == 'img':
-						if not self.params['skip-images']:
+						if not self.params.skip_images:
 							src = tag.get('src', None)
 							if src:
-								self.fb2.add_img(urllib.unquote(src))
+								self.fb2.add_img(os.path.join(self.params.source_file_path, urllib.unquote(src)))
 					
 					else:
 						self.proc_tag(tag)
@@ -270,11 +280,10 @@ class html2fb2(object):
 
 if __name__ == '__main__':
 	
-	params = {}
-	params['data'] = file('test.html').read()
-	#params['data'] = file('mail.htm').read()
-	params['descr'] = fb_utils.description()
-	params['skip-images'] = True
+	params = params_()
+	params.data = file('test.html').read()
+	params.descr = fb_utils.description()
+	params.skip_images = True
 
 	detector = html2fb2()
 	result = detector.process(params)

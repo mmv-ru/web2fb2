@@ -10,11 +10,11 @@ class description(object):
         self.author_last = u''
         self.title = u''
         self.genre = u''
-        self.lang = ''
+        self.lang = u''
         self.src_url = None
         self.program_info = None
-        self.id = ''
-        self.lang = ''
+        self.id = u''
+        self.lang = u''
 
 class genres(object):
     def __init__(self):

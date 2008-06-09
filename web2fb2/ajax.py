@@ -12,14 +12,7 @@ import json
 import web.template
 render = web.template.render('templates/')
 
-import logging
-import logging.handlers
-#настраиваем главный логгер
-handler = logging.handlers.RotatingFileHandler('web2fb2.log', maxBytes = 1000000, backupCount = 1)
-handler.setFormatter(logging.Formatter('%(asctime)s %(name)-24s %(levelname)-8s %(message)s'))
-log = logging.root
-log.addHandler(handler)
-log.setLevel(logging.DEBUG)
+import log
 
 def main():
 	print "Content-Type: text/html; charset=UTF-8\n"
@@ -46,11 +39,23 @@ def base():
 	)
 	
 def ajax():
+
+
+	log.info('************************************')
+	log.info('Start ajax')
+	
+	log.debug('Cleaning up')
+	try:
+		process.clean_up() #уборка территорий
+	except:
+		log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+
+	
 	params = process.web_params()
 	
 	form = cgi.FieldStorage()
 	
-	params.url =  form.getvalue('url', None)
+	params.url =  form.getvalue('url', '')
 	
 	if form.getvalue('img') == 'true':
 		params.is_img = True
@@ -59,7 +64,7 @@ def ajax():
 		params.yah2fb = True
 	
 	descr = fb_utils.description()
-	descr.url = form.getvalue('url')
+	descr.url = params.url
 	
 	if form.getvalue('autodetect') == 'true':
 		descr.author_first = descr.SELFDETECT
@@ -80,19 +85,18 @@ def ajax():
 	#log.debug(str(params.descr.genre))
 		
 	try:
-		rez = process.process().do_web(params)
+		progres = process.do(params, True)
 	except Exception, er:
-		print json.write({'error': render.ajax_error('Internal error')})
+		print json.write({'error': render.ajax_error(str(er))})
 	else:
-		if rez[0] == 0:
-			print json.write({'error': render.ajax_error(str(rez[1]))})
+		log.debug(str(progres))
+		
+		if progres.error:
+			print json.write({'error': render.ajax_error(str(progres.error))})
+		elif progres.done:
 			
-		elif rez[0] == 1:
-			stat = rez[1]
+			stat = progres.done
 			
-			log.debug(str(type(stat.descr.title.encode('UTF-8'))))
-			
-			log.debug(stat.descr.genre)
 			print json.write(
 				{
 					'result':render.ajax_result(
@@ -113,6 +117,13 @@ def ajax():
 					}
 				}
 			)
+		else:
+			
+			print json.write({'progres': render.ajax_progres(
+				progres.msgs,
+				progres.level,
+				[x for x in xrange(len(progres.msgs))]
+			)})
 
 if __name__=='__main__':
 	main()
