@@ -87,12 +87,20 @@ def ajax():
 	try:
 		progres = process.do(params, True)
 	except Exception, er:
-		print json.write({'error': render.ajax_error(str(er))})
+		if 'Try error' in str(er):
+			print json.write({'error': render.ajax_try(log.debug('Try later'))})
+			log.debug('Try later')
+		else:
+			print json.write({'error': render.ajax_error(str(er))})
+			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+
 	else:
 		log.debug(str(progres))
 		
 		if progres.error:
 			print json.write({'error': render.ajax_error(str(progres.error))})
+			log.debug('progres return error: %s' % progres.error)
+
 		elif progres.done:
 			
 			stat = progres.done

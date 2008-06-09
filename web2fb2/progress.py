@@ -1,5 +1,7 @@
 #coding=utf-8
 import pickle
+import time
+
 class progress(object):
 
 	msgs = [
@@ -15,6 +17,7 @@ class progress(object):
 		self.url = None
 		self.error = None
 		self.level = 0
+		self.time = time.time()
 		
 		
 	def save(self):
@@ -23,7 +26,8 @@ class progress(object):
 				'url':self.url,
 				'done':self.done,
 				'error':self.error,
-				'level': self.level
+				'level': self.level,
+				'time': self.time
 			},
 			0)
 			
@@ -36,6 +40,7 @@ class progress(object):
 		self.done = d['done']
 		self.error = d['error']
 		self.level = d['level']
+		self.time = d['time']
 		
 if __name__ == '__main__':
 	prog = progress('tmp.dump')

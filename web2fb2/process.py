@@ -26,6 +26,8 @@ import progress
 import webprocess
 import htmlprocess
 
+import sessions
+
 
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
 RAW_PATH = "raw" #путь к папке, где лежат скачанные html и картинки
@@ -53,6 +55,17 @@ class ebook_stat_(object):
 		self.file_name = '' 
 		self.img = False
 		self.descr = None
+		
+class ProgError(Exception):
+	'''
+	объект - исключение
+	
+	'''
+
+	def __init__(self, value = 'Progress Error'):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
 		
 def clean_up():
 	'''
@@ -90,29 +103,55 @@ def do(params, ajax = False):
 	
 	progres = progress.progress(os.path.join(ebook_folder, '.progress'))
 	
+	
 	l = lock.lock_('book')
 	if not try_create_folder(ebook_folder): #такая книга уже создается или уже есть
 		l.unlock()
 		
+		
+		log.debug('loading progress')
+		progres.load()
+		
+			
 		if ajax:
 			log.debug('time to load progress')
 			progres.load()
 			log.debug('progeress loaded!')
+			
+			if ((time.time()  - progres.time) > 600) and not (progres.error or progres.done):
+				raise ProgError, 'Script error'
+		
 			
 			return progres
 		
 		log.info('ebook %s folder exist, waitnig for done' % ebook_folder)
 		while 1: #ждем, пока книга создаcтся
 			progres.load()
+			
+			if ((time.time()  - progres.time) > 600) and not (progres.error or progres.done):
+				raise ProgError, 'Script error'
+			
 			if progres.done or progres.error:
 				break
 			time.sleep(1)
 		log.debug('wating complete!')
-		return progres #возваращаем результат
-
+		return progres #возвращаем результат
+	
 	else:
+		sess = sessions.session()
+		log.debug('start session')
+		
+		if not sess.start(): #начинаем сессию
+			shutil.rmtree(ebook_folder)
+			l.unlock()
+			#если не удачно - выводим try again и ссылку на запрашиваемый урл
+			raise ProgError, 'Try error'
+		
+		log.info('Yes! new session')
+		
 		progres.save()
 		l.unlock()
+		
 		
 		if ajax:
 			sys.stdout.flush()
@@ -192,7 +231,9 @@ def do(params, ajax = False):
 		except Exception, er:
 			progres.error = er
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
-			
+		
+		log.debug('end session')
+		sess.end() #завершаем сессию
 		progres.save()
 		return progres
 
