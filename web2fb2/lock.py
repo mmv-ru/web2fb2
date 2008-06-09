@@ -2,7 +2,7 @@
 import fcntl
 import os
 
-class lock():
+class lock_(object):
 	lock_folder = 'temp'
 	def __init__(self, f_name):
 		self.f = file(os.path.join(self.lock_folder, "." + f_name), 'w')
@@ -18,6 +18,3 @@ if __name__ == '__main__':
 	time.sleep(5)
 	l.unlock()
 	print 'unlock'
-	
-
-	

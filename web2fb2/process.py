@@ -65,17 +65,17 @@ def clean_up():
 				shutil.rmtree(os.path.join(folder, dir))
 	
 	#удаляем старые папки с книжками
-	l = lock.lock('book')
+	l = lock.lock_('book')
 	clean_folder(EBOOKZ_PATH, CLEAN_TIME)
 	l.unlock()	
 	
 	#удаляем временные файлы
-	l = lock.lock('temp')
+	l = lock.lock_('temp')
 	clean_folder(TEMP_PATH, CLEAN_TIME)
 	l.unlock()
 			
 	#удаляем скаченные файлы
-	l = lock.lock('raw')
+	l = lock.lock_('raw')
 	clean_folder(RAW_PATH, CLEAN_TIME)
 	l.unlock()
 			
@@ -90,7 +90,7 @@ def do(params, ajax = False):
 	
 	progres = progress.progress(os.path.join(ebook_folder, '.progress'))
 	
-	l = lock.lock('book')
+	l = lock.lock_('book')
 	if not try_create_folder(ebook_folder): #такая книга уже создается или уже есть
 		l.unlock()
 		
@@ -124,77 +124,77 @@ def do(params, ajax = False):
 				os.dup2(fw.fileno(),1)
 				os.dup2(fw.fileno(),2)
 		
-				try:
-					raw_name = md5.new(str(pickle.dumps([params.url, params.is_img]))).hexdigest()
-					raw_folder = os.path.join(RAW_PATH, raw_name)
-					raw_path = os.path.join(raw_folder, 'html.html')
-					
-					l = lock.lock('raw')
-					if check_folder(raw_folder):		
-						l.unlock()
-						
-					else:
-						l.unlock()
-					
-						temp_name = md5.new(str(random.random())).hexdigest()[:10]
-						temp_folder = os.path.join(TEMP_PATH, temp_name)
-						temp_path = os.path.join(temp_folder, 'html.html')
-					
-						l = lock.lock('temp')
-						os.mkdir(temp_folder)
-						l.unlock()
-					
-						data = webprocess.do(params.url, params.is_img, temp_folder, progres)
-						file(temp_path, 'w').write(data.encode('UTF-8'))
-					
-						l = lock.lock("temp")
-						l1 = lock.lock("raw")
-						log.debug('lock2')
-						try_move_folder(temp_folder, raw_folder)
-						l1.unlock()
-						l.unlock()
-					
-					params.descr.url = params.url
-					
-					#data = file(raw_path).read().decode('UTF-8')
-					ebook_tmp_path = os.path.join(ebook_folder, '.ebook.fb2')
-					
-					log.debug('start html process')
-					progres.level = 3
-					progres.save()
-					log.debug('start html process2')
-					descr = htmlprocess.do(raw_path, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img)
-					log.debug('End of html process')
-					
-					ebook_name = gen_name('_'.join((descr.author_last, descr.author_first, descr.title )))
-					if ebook_name:
-						ebook_path = os.path.join(ebook_folder, ebook_name + '.fb2')
-					else:
-						ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.url)[1][:48] + '.fb2')
+		try:
+			raw_name = md5.new(str(pickle.dumps([params.url, params.is_img]))).hexdigest()
+			raw_folder = os.path.join(RAW_PATH, raw_name)
+			raw_path = os.path.join(raw_folder, 'html.html')
+			
+			l = lock.lock_('raw')
+			if check_folder(raw_folder):		
+				l.unlock()
+				
+			else:
+				l.unlock()
+			
+				temp_name = md5.new(str(random.random())).hexdigest()[:10]
+				temp_folder = os.path.join(TEMP_PATH, temp_name)
+				temp_path = os.path.join(temp_folder, 'html.html')
+			
+				l = lock.lock_('temp')
+				os.mkdir(temp_folder)
+				l.unlock()
+			
+				data = webprocess.do(params.url, params.is_img, temp_folder, progres)
+				file(temp_path, 'w').write(data.encode('UTF-8'))
+			
+				l = lock.lock_("temp")
+				l1 = lock.lock_("raw")
+				log.debug('lock2')
+				try_move_folder(temp_folder, raw_folder)
+				l1.unlock()
+				l.unlock()
+			
+			params.descr.url = params.url
+			
+			#data = file(raw_path).read().decode('UTF-8')
+			ebook_tmp_path = os.path.join(ebook_folder, '.ebook.fb2')
+			
+			log.debug('start html process')
+			progres.level = 3
+			progres.save()
+			log.debug('start html process2')
+			descr = htmlprocess.do(raw_path, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img)
+			log.debug('End of html process')
+			
+			ebook_name = gen_name('_'.join((descr.author_last, descr.author_first, descr.title )))
+			if ebook_name:
+				ebook_path = os.path.join(ebook_folder, ebook_name + '.fb2')
+			else:
+				ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.url)[1][:48] + '.fb2')
 
-					os.rename(ebook_tmp_path, ebook_path)
-					
-					if params.is_zip:
-						log.debug("Start file zipping")
-						ebook_path = zip_file(ebook_path, ebook_folder)
-						log.debug("End of file zipping")
-						
-					ebook_stat = ebook_stat_()
-					ebook_stat.url = params.url
-					ebook_stat.path = ebook_folder
-					ebook_stat.descr = descr
-					ebook_stat.file_name = os.path.split(ebook_path)[1]
-					ebook_stat.work_time  = 0
-					ebook_stat.file_size = os.path.getsize(ebook_path) 
-					ebook_stat.img =  params.is_img
-					
-					progres.done = ebook_stat
-				except Exception, er:
-					progres.error = er
-					log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
-					
-				progres.save()
-				return progres
+			os.rename(ebook_tmp_path, ebook_path)
+			
+			if params.is_zip:
+				log.debug("Start file zipping")
+				ebook_path = zip_file(ebook_path, ebook_folder)
+				log.debug("End of file zipping")
+				
+			ebook_stat = ebook_stat_()
+			ebook_stat.url = params.url
+			ebook_stat.path = ebook_folder
+			ebook_stat.descr = descr
+			ebook_stat.file_name = os.path.split(ebook_path)[1]
+			ebook_stat.work_time  = 0
+			ebook_stat.file_size = os.path.getsize(ebook_path) 
+			ebook_stat.img =  params.is_img
+			
+			progres.done = ebook_stat
+		except Exception, er:
+			progres.error = er
+			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+			
+		progres.save()
+		return progres
 
 	
 def try_create_folder(folder)	:
