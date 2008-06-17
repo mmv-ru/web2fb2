@@ -34,9 +34,9 @@ def base():
 		
 		do_it = form.getvalue('doit', False)
 		
-		print render.ajax_base(
-			render.ajax_form(url, is_img, do_it),
-			render.ajax_descr(
+		print render.widget_base(
+			render.widget_form(url, is_img, do_it),
+			render.widget_descr(
 				'',
 				'',
 				'',
@@ -48,9 +48,9 @@ def base():
 		)
 	
 	else:
-		print render.ajax_base(
-			render.ajax_form('http://', True, False),
-			render.ajax_descr(
+		print render.widget_base(
+			render.widget_form('http://', True, False),
+			render.widget_descr(
 				'',
 				'',
 				'',
@@ -111,17 +111,17 @@ def ajax():
 		progres = process.do(params, True)
 	except Exception, er:
 		if 'Try error' in str(er):
-			print json.write({'error': render.ajax_try(log.debug('Try later'))})
+			print json.write({'error': render.widget_try(log.debug('Try later'))})
 			log.debug('Try later')
 		else:
-			print json.write({'error': render.ajax_error(str(er))})
+			print json.write({'error': render.widget_error(str(er))})
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 
 	else:
 		log.debug(str(progres))
 		
 		if progres.error:
-			print json.write({'error': render.ajax_error(str(progres.error))})
+			print json.write({'error': render.widget_error(str(progres.error))})
 			log.debug('progres return error: %s' % progres.error)
 
 		elif progres.done:
@@ -130,7 +130,7 @@ def ajax():
 			
 			print json.write(
 				{
-					'result':render.ajax_result(
+					'result':render.widget_result(
 						stat.url,
 						'%.1f' % stat.work_time,
 						stat.img,
@@ -150,10 +150,12 @@ def ajax():
 			)
 		else:
 			
-			print json.write({'progres': render.ajax_progres(
+			print json.write({'progres': render.widget_progres(
 				progres.msgs,
 				progres.level,
-				[x for x in xrange(len(progres.msgs))]
+				[x for x in xrange(len(progres.msgs))],
+				progres.level + 1,
+				len(progres.msgs) + 1
 			)})
 
 if __name__=='__main__':
