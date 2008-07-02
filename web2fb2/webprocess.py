@@ -1,4 +1,9 @@
 #coding=utf-8
+
+# скачивание html, исправление, поиск картинок, скачка картинок
+#
+#
+
 import urllib2
 import urlparse
 import socket
@@ -29,6 +34,8 @@ class WebError(Exception):
 
 
 def do(url, is_img, rez_folder, progres):
+
+	"""главная рабочая функция"""
 	
 	try:
 		data, real_url = download_html(url)
@@ -53,6 +60,9 @@ def do(url, is_img, rez_folder, progres):
 	return data
 
 def correct(data):
+
+	"""корректировка кривого html"""
+	
 	log.debug('start html correct')
 	p = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("simpletree"))
 	dom_tree = p.parse(data)
@@ -116,7 +126,7 @@ def process_images(data, source_folder, url):
 				img_name = imgs_list[new_url]
 			else:
 				#генерим имя картинки
-				img_name = md5.new(str(random.random())).hexdigest()[:10]				
+				img_name = "img" + md5.new(str(random.random())).hexdigest()[:10]				
 				#заносим в словарь урл и имя файла
 				imgs_list[new_url] = img_name
 				

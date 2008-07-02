@@ -81,8 +81,18 @@ body {
 	text-align: center;
 	width:40em;
 	margin: 0 auto 0 auto ;
-	padding: 0.5em 0.5em 0.5em 0.5em;
+	
 }
+
+.title h2{
+	margin-bottom: 0px;
+	margin-top: 0px;
+}
+
+.title span{
+	font-size: 0.8em;
+}
+
 
 .bottom {
 	left: 0px;

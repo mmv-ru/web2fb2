@@ -1,4 +1,7 @@
 #coding=utf-8
+
+# главный модуль обработки
+
 import traceback
 
 
@@ -15,10 +18,6 @@ import zipfile
 import time
 import urlparse
 
-import h2fb
-import yah2fb
-import fb_utils
-
 import lock
 import log
 
@@ -28,17 +27,15 @@ import htmlprocess
 
 import sessions
 
-
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
 RAW_PATH = "raw" #путь к папке, где лежат скачанные html и картинки
 TEMP_PATH = "raw_temp" #папка для временных файлов
 CLEAN_TIME = 600 #время, через которое будут удалятся старые ебуки
 
-#http://python.com.ua/ru/news/2006/04/20/zaschita-ot-duraka-v-programmah-na-yazyike-python/
-#http://python.com.ua/ru/news/2006/04/07/rabota-s-fajlami/
-
-
 class web_params(object):
+	"""
+	класс, контейнер параметров, передаваемых в обратку из веб-интерфейса
+	"""
 	def __init__(self):
 		self.url = ''
 		self.is_img = ''
@@ -47,6 +44,9 @@ class web_params(object):
 		self.yah2fb = False
 		
 class ebook_stat_(object):
+	"""
+	модуль контейнер для параметров книги, возвращаемых из обработки в веб-интерйфейс
+	"""
 	def __init__(self):
 		self.file_size = 0
 		self.work_time = 0.0
@@ -58,7 +58,7 @@ class ebook_stat_(object):
 		
 class ProgError(Exception):
 	'''
-	объект - исключение
+	объект - исключение при обработке
 	
 	'''
 
@@ -94,40 +94,47 @@ def clean_up():
 			
 def do(params, ajax = False):
 
+	"""
+	рабочая функция процесса. принимает объект класса web_params, возвращает объект класса progress.progress
+	"""
+
 	log.debug('start process')
-	#создаем хешь из всего - для однозначной идентификации файла
+	#создаем хешь из всего - для однозначной идентификации файла. имя папки однозначно отображает параметры создания книги
 	folder_name = md5.new(str(pickle.dumps(params))).hexdigest()
+	
 	log.debug('Generate name: %s'% folder_name)
 	
-	ebook_folder = os.path.join(EBOOKZ_PATH, folder_name)
+	ebook_folder = os.path.join(EBOOKZ_PATH, folder_name) #путь к папке с будующей книгой
 	
-	progres = progress.progress(os.path.join(ebook_folder, '.progress'))
+	progres = progress.progress(os.path.join(ebook_folder, '.progress'))  #создаем объект прогресса ( ифнормация о ходе обработки книги)
 	
-	
-	l = lock.lock_('book')
+	l = lock.lock_('book') #делаем блокировку на папку с книгами
+	#надо не в коем случае не забыть ее снять
 	if not try_create_folder(ebook_folder): #такая книга уже создается или уже есть
-		l.unlock()
-		
+		l.unlock() #снимаем блокировку
 		
 		log.debug('loading progress')
-		progres.load()
+		progres.load() #загружаем данные прогресса из файла
 		
-			
-		if ajax:
+		if ajax: #если у нас ajax версия
+			#считываем прогресс и отправляем в вебинтерфейс
 			log.debug('time to load progress')
-			progres.load()
+			progres.load() #считываем прогересс и от
 			log.debug('progeress loaded!')
 			
+			#если книга создается уж слишком долго как-то - возвращаем ошибку
 			if ((time.time()  - progres.time) > 600) and not (progres.error or progres.done):
 				raise ProgError, 'Script error'
-		
 			
 			return progres
 		
+		#если не ajax
+		#тупо ждем в цикле, пока книга не сделается
 		log.info('ebook %s folder exist, waitnig for done' % ebook_folder)
 		while 1: #ждем, пока книга создаcтся
 			progres.load()
 			
+			#если книга создается уж слишком долго как-то - возвращаем ошибку
 			if ((time.time()  - progres.time) > 600) and not (progres.error or progres.done):
 				raise ProgError, 'Script error'
 			
@@ -137,44 +144,53 @@ def do(params, ajax = False):
 		log.debug('wating complete!')
 		return progres #возвращаем результат
 	
-	else:
-		sess = sessions.session()
+	else: # если папки с книгой нету (т.е. такой книги не создается и не создавалось, будем ее создавать
+		sess = sessions.session() #создаем объект сессию
 		log.debug('start session')
 		
-		if not sess.start(): #начинаем сессию
-			shutil.rmtree(ebook_folder)
-			l.unlock()
-			#если не удачно - выводим try again и ссылку на запрашиваемый урл
-			raise ProgError, 'Try error'
+		if not sess.start(): #начинаем сессию, если неудчно
+			shutil.rmtree(ebook_folder) #удаляем ранее созданную папку для ебуки
+			l.unlock() #снимаем блокировку
+			
+			raise ProgError, 'Try error' #возвращаем ошибку
 		
 		log.info('Yes! new session')
 		
-		progres.save()
-		l.unlock()
-		
+		progres.save() #сохраняем новый погресс
+		l.unlock() #снимаем блокировку
 		
 		if ajax:
+			#создаем отдельный поток для процесса создания книги
+			#грязынй хак с потоками ввода-вывода
 			sys.stdout.flush()
-			if os.fork():
+			if os.fork(): #поток, из которого возвращаемся
 				progres.load()
 				return progres
 			else:
+				#грязынй хак с потоками ввода-вывода
+				#отсытковываем процесс от потоков ввода вывода, чтоб апач не ждал окончания работы, а отдал страницу целиком
 				fw = open('/dev/null','w')
 				os.dup2(fw.fileno(),1)
 				os.dup2(fw.fileno(),2)
 		
+		#собственно сам процесс
 		try:
-			raw_name = md5.new(str(pickle.dumps([params.url, params.is_img]))).hexdigest()
+			#создаем имя для папки, в которую скачивается страница и картинки. имя папки однозначно отображает параметры страницы
+			raw_name = md5.new(str(pickle.dumps([params.url, params.is_img]))).hexdigest() 
 			raw_folder = os.path.join(RAW_PATH, raw_name)
 			raw_path = os.path.join(raw_folder, 'html.html')
 			
+			
+			#если такая папка уже есть - нафиг работать, пользуемся готовым
 			l = lock.lock_('raw')
-			if check_folder(raw_folder):		
+			if check_folder(raw_folder):
 				l.unlock()
 				
 			else:
 				l.unlock()
-			
+				
+				# если халявы нет, придется все делать с нуля
+				#созаем рандомное имя для папки
 				temp_name = md5.new(str(random.random())).hexdigest()[:10]
 				temp_folder = os.path.join(TEMP_PATH, temp_name)
 				temp_path = os.path.join(temp_folder, 'html.html')
@@ -183,9 +199,11 @@ def do(params, ajax = False):
 				os.mkdir(temp_folder)
 				l.unlock()
 			
+				#запускаем скачку страницы и разные предобработки
 				data = webprocess.do(params.url, params.is_img, temp_folder, progres)
 				file(temp_path, 'w').write(data.encode('UTF-8'))
 			
+				# пытаемся перенести временную папку в папку в которую все скачивается
 				l = lock.lock_("temp")
 				l1 = lock.lock_("raw")
 				log.debug('lock2')
@@ -196,28 +214,32 @@ def do(params, ajax = False):
 			params.descr.url = params.url
 			
 			#data = file(raw_path).read().decode('UTF-8')
-			ebook_tmp_path = os.path.join(ebook_folder, '.ebook.fb2')
+			ebook_tmp_path = os.path.join(ebook_folder, '.ebook.fb2') #временное имя книги, вместе с папкой
 			
-			log.debug('start html process')
+			#сохраняем прогресс
 			progres.level = 3
 			progres.save()
-			log.debug('start html process2')
-			descr = htmlprocess.do(raw_path, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img)
+			log.debug('start html process')
+			descr = htmlprocess.do(raw_path, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img) #процесс перевода html в книгу
 			log.debug('End of html process')
 			
+			#создаем имя
 			ebook_name = gen_name('_'.join((descr.author_last, descr.author_first, descr.title )))
 			if ebook_name:
 				ebook_path = os.path.join(ebook_folder, ebook_name + '.fb2')
 			else:
 				ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.url)[1][:48] + '.fb2')
 
+			#переименовываем книгу из временного имени в новое
 			os.rename(ebook_tmp_path, ebook_path)
 			
+			#зипуем книгу
 			if params.is_zip:
 				log.debug("Start file zipping")
 				ebook_path = zip_file(ebook_path, ebook_folder)
 				log.debug("End of file zipping")
 				
+			#создаем и заполняем объект реузльтатов.
 			ebook_stat = ebook_stat_()
 			ebook_stat.url = params.url
 			ebook_stat.path = ebook_folder
@@ -227,18 +249,22 @@ def do(params, ajax = False):
 			ebook_stat.file_size = os.path.getsize(ebook_path) 
 			ebook_stat.img =  params.is_img
 			
-			progres.done = ebook_stat
-		except Exception, er:
+			progres.done = ebook_stat # сохраняем в прогрессе
+		except Exception, er: # если в процессе всей этой деятельности произошла ошибка, возвращаем ошибку
 			progres.error = er
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 		
 		log.debug('end session')
 		sess.end() #завершаем сессию
-		progres.save()
-		return progres
+		progres.save() 
+		return progres #возвращаем прогресс
 
 	
 def try_create_folder(folder)	:
+	'''
+	пытается создать папку folder
+	если такая есть - возвращает False, иначе True
+	'''
 
 	try:
 		log.debug('Try to set  new time for %s' % folder)
@@ -263,6 +289,10 @@ def try_create_folder(folder)	:
 		return True
 		
 def check_folder(folder):
+	'''
+	проверяет наличие папки folder, при этом переводит время создания папки на текущее
+	'''
+	
 	log.debug('Check folder %s' % folder)
 	try:
 		log.debug('Try to set  new time for %s' % folder)
@@ -276,6 +306,10 @@ def check_folder(folder):
 		return True
 	
 def try_move_folder(source_folder, dest_folder):
+	'''
+	пытается перенести папку source_folder в dest_folder
+	'''
+
 	log.debug('try to move folder %s to %s' % (source_folder, dest_folder))
 	if not os.path.exists(dest_folder):
 		shutil.move(source_folder, dest_folder)
@@ -285,6 +319,10 @@ def try_move_folder(source_folder, dest_folder):
 		log.debug('Dest folder exist, delete source folder')
 		
 def zip_file(source_path, rez_folder):
+	'''
+	упаковывает файл source_path в папку rez_dolder, к имени файла добавляет zip и возвращает новое имя файла вместе с путем
+	'''
+	
 	file_name = os.path.split(source_path)[1]
 	zip_path = os.path.join(rez_folder, file_name + ".zip")
 	

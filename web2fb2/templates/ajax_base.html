@@ -13,7 +13,6 @@ $def with (form, descr)
 </script>
 </head>
 <body>
-<div id="content">
 
 <!-- google analytics -->
 <script type="text/javascript">
@@ -27,21 +26,41 @@ pageTracker._trackPageview();
 </script>
 <!-- end of google analytics -->
 
+<div id="content">
+
 <div class = 'donate'>
 <!-- pay-pal -->
-    <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+    
+<!-- end of pay-pal -->
+</div>
+
+<div class = "title">
+<center>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td width="30%">&nbsp;</td>
+	  <td align="center"><h2>Web2FB2</h2></td>
+	  <td width="30%" align = "left">
+	  
+	  <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
       <input type="hidden" name="cmd" value="_s-xclick">
       <input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
       <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
       <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
 ">
     </form>
-<!-- end of pay-pal -->
-</div>
+	
+	  </td>
+	</tr>
+	<tr>
+	  <td colspan="3" align="center"><span>converting URL/web-page to file in fb2 format</span></td>
+	</tr>
+  </table>
+</center>
 
-<div class = "title">
-<h2>Web2FB2</h2>
-<h5 >Beta vertion.
+
+
+<h5 >Beta version.
     Please add bug (with URL and short description) <a href = 'http://trac2.assembla.com/web2fb2/newticket'>here.</a> </h5>
 </div>
 

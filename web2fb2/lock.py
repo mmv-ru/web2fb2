@@ -1,8 +1,16 @@
 #!/usr/bin/python2.4
+#coding=utf-8
+
+# предназанчено для синхронизации между процессами
+
 import fcntl
 import os
 
 class lock_(object):
+	"""
+	объект синхронизации, имеет имя. Только один объект (среди всех объектов с именем f_name), 
+	может быть в состоянии lock. Остальные, при поптыке сделать lock - ждут анлока.
+	"""
 	lock_folder = 'temp'
 	def __init__(self, f_name):
 		self.f = file(os.path.join(self.lock_folder, "." + f_name), 'w')

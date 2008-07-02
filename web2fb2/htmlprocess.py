@@ -12,6 +12,16 @@ import h2fb
 import log
 
 def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
+
+	"""
+	преобразрвание html в fb2, c определением языка и поддержкой нескольких движков
+	source_file - html файл
+	descr - объект типа fb_utils.description
+	rez_file - куда писать результат
+	is_yah2fb - какой движок использовать
+	is_img - с картинками или без
+	
+	"""
 	
 	data = file(source_file).read().decode('UTF-8')
 	
@@ -72,6 +82,9 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 		return descr
 
 def detect_lang(data):
+	'''
+	детектит язык
+	'''
 	soup = BeautifulSoup(data)
 	text = ''.join(soup.findAll(text = True))
 		
