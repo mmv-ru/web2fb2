@@ -14,8 +14,7 @@ import os
 import chardet
 
 import html5lib
-from html5lib import treebuilders, treewalkers, serializer
-from html5lib.filters import sanitizer
+from html5lib import treebuilders
 
 from BeautifulSoup import BeautifulSoup
 
@@ -64,16 +63,10 @@ def correct(data):
 	"""корректировка кривого html"""
 	
 	log.debug('start html correct')
-	p = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("simpletree"))
-	dom_tree = p.parse(data)
-	walker = treewalkers.getTreeWalker("simpletree")
-	stream = walker(dom_tree)
-	s = serializer.htmlserializer.HTMLSerializer(omit_optional_tags=False, quote_attr_values = True)
-	output_generator = s.serialize(stream)
-		
-	out_data = u''
-	for item in output_generator:
-		out_data += item
+	p = html5lib.HTMLParser(tree=treebuilders.getTreeBuilder("BeautifulSoup"))
+	soup = p.parse(data)
+	
+	out_data = unicode(soup)
 	
 	log.debug('end of html correct')
 	return out_data
