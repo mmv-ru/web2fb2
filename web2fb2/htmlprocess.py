@@ -6,6 +6,9 @@ import os
 import ngram
 from BeautifulSoup import BeautifulSoup
 
+import html5lib
+from html5lib import treebuilders
+
 import yah2fb
 import h2fb
 

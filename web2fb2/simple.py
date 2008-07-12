@@ -5,23 +5,28 @@ import cgi, cgitb
 cgitb.enable()
 import traceback
 
+import Cookie
+
 import log
 from string import Template
 import os
 
 import web.template
 render = web.template.render('templates/')
-
+import webutils
 
 import process
 import sessions
 import fb_utils
+import prior
+
 
 def main():
 	log.info('************************************')
 	log.info('Start web')
 	
-	print "Content-Type: text/html; charset=UTF-8\n"
+	global sid
+	sid = webutils.sid_work()
 	
 	log.debug('Cleaning up')
 	try:
@@ -30,6 +35,7 @@ def main():
 		log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 
 
+	
 	#пытаемся получить получить переменные из формы
 	form = cgi.FieldStorage()
 	url = form.getvalue('url')
@@ -39,7 +45,7 @@ def main():
 	log.debug('Try to get url: %s' % url)
 
 	if not url:
-		print render.simple_base(render.simple_form())
+		webutils.print_page( render.simple_base(render.simple_form()) )
 	else:
 		log.info('We get url: %s' % url)
 		
@@ -81,21 +87,20 @@ def main():
 		#запускаем сам процесс, перехватываем все неперехваченые ошибки в лог
 		log.debug('url: %s Start process' % url)
 		try:
-			progres = process.do(params)
+			progres = process.do(params, sid)
+		except process.SessRet, er:
+			webutils.print_page( render.simple_base( render.simple_try(os.environ['REQUEST_URI'], er.value['place'], prior.priors.get( er.value['prior'], 'unknown') ), refresh = True ))
+			
+			log.debug('Try later')
 		except Exception, er:
-			if 'Try error' in str(er):
-				print render.simple_base( render.simple_try(os.environ['REQUEST_URI']) )
-				log.debug('Try later')
-				
-			else:
 				log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
-				print render.simple_base( render.simple_error(str(er)) )
+				webutils.print_page( render.simple_base( render.simple_error(str(er)) ) )
 	
 		else:
 			log.debug('url: %s Stop process' % url)
 			
 			if progres.error:
-				print render.simple_base( render.simple_error(str(progres.error)) )
+				webutils.print_page( render.simple_base( render.simple_error(str(progres.error)) ) )
 			elif progres.done:
 				stat = progres.done
 			
@@ -118,7 +123,7 @@ def main():
 					stat.img,
 					stat.url
 				)
-				print render.simple_base(result_html + descr_html)
+				webutils.print_page( render.simple_base(result_html + descr_html) )
 			
 	log.info('End web')
 

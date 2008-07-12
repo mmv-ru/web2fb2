@@ -10,6 +10,7 @@ $(document).ready(function(){
 	$(".error").hide()
 	$(".result").hide()
 	$(".progres").hide()
+	$(".try").hide()
 	$(".cancel").hide()
 	
 	autodetect_change()
@@ -36,6 +37,8 @@ $(document).ready(function(){
 		function(){
 			$(".error").html('')
 			$(".error").hide()
+			$(".try").html('')
+			$(".try").hide()
 			$(".result").html('')
 			$(".result").hide('')
 			$(".cancel").show('')
@@ -112,6 +115,7 @@ $(document).ready(function(){
 	{
 		work_enable();
 		$(".progres").hide()
+		$(".try").hide()
 		$(".cancel").hide()
 		$(".result").hide()
 		$(".error").hide()
@@ -129,6 +133,7 @@ $(document).ready(function(){
 			work_enable();
 			$(".progres").hide()
 			$(".cancel").hide()
+			$(".try").hide()
 			$(".error").show()
 			$(".error").html(obj.error)
 		}
@@ -137,6 +142,7 @@ $(document).ready(function(){
 			work_enable();
 			$(".progres").hide()
 			$(".cancel").hide()
+			$(".try").hide()
 			$(".result").show()
 			$(".result").html(obj.result)
 			
@@ -150,14 +156,23 @@ $(document).ready(function(){
 		else if(obj.progres)
 		{
 			
+			$(".try").hide()
 			$(".progres").show()
 			$(".progres").html(obj.progres)
-			window.setTimeout(get_ans, 1000);
+			window.setTimeout(get_ans, 2000);
+		}
+		else if(obj.tryagain)
+		{
+			$(".progres").hide()
+			$(".try").show()
+			$(".try").html(obj.tryagain)
+			window.setTimeout(get_ans, 20000);
 		}
 		else
 		{
 			work_enable();
 			$(".progres").hide()
+			$(".try").hide()
 			$(".cancel").hide()
 			$(".error").show()
 			$(".error").html('Ajax error')

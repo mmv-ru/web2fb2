@@ -36,10 +36,20 @@ body {
 	color: red;
 	width:37em;
 	text-align: center;
-	margin: 0 auto;
+	margin: 0 auto 0 auto;
 	padding: 2em 1em 2em 1em;
 	font-weight: bolder;
 	overflow:visible;
+}
+
+.try {
+	display: none;
+	overflow:visible;
+	font-weight: bold;
+	width:30em;
+	text-align: center;
+	margin: 0 auto 0 auto;
+	padding: 1em 1em 1em 1em;
 }
 
 .result {

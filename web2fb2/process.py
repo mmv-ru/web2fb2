@@ -25,7 +25,7 @@ import progress
 import webprocess
 import htmlprocess
 
-import sessions
+import sess_wrap
 
 EBOOKZ_PATH = "ebookz" #путь к папке, гду будут хранится ebookи =)
 RAW_PATH = "raw" #путь к папке, где лежат скачанные html и картинки
@@ -55,6 +55,13 @@ class ebook_stat_(object):
 		self.file_name = '' 
 		self.img = False
 		self.descr = None
+		
+class SessRet(Exception):
+	'''
+	объект, исключение, возвращаемый если работа не началась и надо вернуть очередь
+	'''
+	def __init__(self, value):
+		self.value = value
 		
 class ProgError(Exception):
 	'''
@@ -92,7 +99,7 @@ def clean_up():
 	clean_folder(RAW_PATH, CLEAN_TIME)
 	l.unlock()
 			
-def do(params, ajax = False):
+def do(params, sess, ajax = False):
 
 	"""
 	рабочая функция процесса. принимает объект класса web_params, возвращает объект класса progress.progress
@@ -145,14 +152,19 @@ def do(params, ajax = False):
 		return progres #возвращаем результат
 	
 	else: # если папки с книгой нету (т.е. такой книги не создается и не создавалось, будем ее создавать
-		sess = sessions.session() #создаем объект сессию
+		
 		log.debug('start session')
 		
-		if not sess.start(): #начинаем сессию, если неудчно
+		sl = lock.lock_('sess')
+		s = sess_wrap.session_start(sess) #делаем запрос на старт сессий
+		sl.unlock()
+		
+		#проверяем, можем работать, или нет
+		if s != True:
 			shutil.rmtree(ebook_folder) #удаляем ранее созданную папку для ебуки
 			l.unlock() #снимаем блокировку
 			
-			raise ProgError, 'Try error' #возвращаем ошибку
+			raise SessRet, s #возвращаем ошибку
 		
 		log.info('Yes! new session')
 		
@@ -254,8 +266,12 @@ def do(params, ajax = False):
 			progres.error = er
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 		
+		#завершаем сессию
 		log.debug('end session')
-		sess.end() #завершаем сессию
+		sl = lock.lock_('sess')
+		sess_wrap.session_end(sess)
+		sl.unlock()
+		
 		progres.save() 
 		return progres #возвращаем прогресс
 

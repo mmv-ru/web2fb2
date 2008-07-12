@@ -42,6 +42,16 @@ body {
 	overflow:visible;
 }
 
+.try {
+	display: none;
+	overflow:visible;
+	font-weight: bold;
+	width:30em;
+	text-align: center;
+	margin: 0 auto 0 auto;
+	padding: 1em 1em 1em 1em;
+}
+
 .result {
 	display: none;
 	overflow:visible;
