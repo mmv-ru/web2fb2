@@ -12,10 +12,17 @@ import json
 import web.template
 render = web.template.render('templates/')
 
+import webutils
+import prior
+
 import log
 
 def main():
-	print "Content-Type: text/html; charset=UTF-8\n"
+	log.info('************************************')
+	log.info('Start ajax')
+	
+	global sid
+	sid = webutils.sid_work()
 	
 	form = cgi.FieldStorage()
 	
@@ -25,6 +32,7 @@ def main():
 		base()
 
 def base():
+	
 	form = cgi.FieldStorage()
 	url =  form.getvalue('url', '')
 	
@@ -34,30 +42,34 @@ def base():
 		
 		do_it = form.getvalue('doit', False)
 		
-		print render.ajax_base(
-			render.ajax_form(url, is_img, do_it),
-			render.ajax_descr(
-				'',
-				'',
-				'',
-				'',
-				fb_utils.genres().get_genres_descrs(),
-				fb_utils.genres().get_default(),
-				''
+		webutils.print_page(
+			render.ajax_base(
+				render.ajax_form(url, is_img, do_it),
+				render.ajax_descr(
+					'',
+					'',
+					'',
+					'',
+					fb_utils.genres().get_genres_descrs(),
+					fb_utils.genres().get_default(),
+					''
+				)
 			)
 		)
 	
 	else:
-		print render.ajax_base(
-			render.ajax_form('http://', True, False),
-			render.ajax_descr(
-				'',
-				'',
-				'',
-				'',
-				fb_utils.genres().get_genres_descrs(),
-				fb_utils.genres().get_default(),
-				''
+		webutils.print_page(
+			render.ajax_base(
+				render.ajax_form('http://', True, False),
+				render.ajax_descr(
+					'',
+					'',
+					'',
+					'',
+					fb_utils.genres().get_genres_descrs(),
+					fb_utils.genres().get_default(),
+					''
+				)
 			)
 		)
 	
@@ -108,53 +120,55 @@ def ajax():
 	#log.debug(str(params.descr.genre))
 		
 	try:
-		progres = process.do(params, True)
-	except Exception, er:
-		if 'Try error' in str(er):
-			print json.write({'error': render.ajax_try(log.debug('Try later'))})
+		progres = process.do(params, sid, True)
+	except process.SessRet, er:
+			webutils.print_page( json.write({'tryagain': render.ajax_try( er.value['place'], prior.priors.get( er.value['prior'], 'unknown') )}))
 			log.debug('Try later')
-		else:
-			print json.write({'error': render.ajax_error(str(er))})
+	except Exception, er:
+			webutils.print_page( json.write({'error': render.ajax_error(str(er))}) )
 			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 
 	else:
 		log.debug(str(progres))
 		
 		if progres.error:
-			print json.write({'error': render.ajax_error(str(progres.error))})
+			webutils.print_page( json.write({'error': render.ajax_error(str(progres.error))}) )
 			log.debug('progres return error: %s' % progres.error)
 
 		elif progres.done:
 			
 			stat = progres.done
 			
-			print json.write(
-				{
-					'result':render.ajax_result(
-						stat.url,
-						'%.1f' % stat.work_time,
-						stat.img,
-						stat.path + '/' + stat.file_name,
-						stat.file_name,
-						stat.file_size//1024
-					),
-					'descr':{
-						'title':stat.descr.title.encode('UTF-8'),
-						'author_first':stat.descr.author_first.encode('UTF-8'),
-						'author_middle':stat.descr.author_middle.encode('UTF-8'),
-						'author_last':stat.descr.author_last.encode('UTF-8'),
-						'genre':stat.descr.genre.encode('UTF8'),
-						'lang':stat.descr.lang.encode('UTF8')
+			webutils.print_page(
+				json.write(
+					{
+						'result':render.ajax_result(
+							stat.url,
+							'%.1f' % stat.work_time,
+							stat.img,
+							stat.path + '/' + stat.file_name,
+							stat.file_name,
+							stat.file_size//1024
+						),
+						'descr':{
+							'title':stat.descr.title.encode('UTF-8'),
+							'author_first':stat.descr.author_first.encode('UTF-8'),
+							'author_middle':stat.descr.author_middle.encode('UTF-8'),
+							'author_last':stat.descr.author_last.encode('UTF-8'),
+							'genre':stat.descr.genre.encode('UTF8'),
+							'lang':stat.descr.lang.encode('UTF8')
+						}
 					}
-				}
+				)
 			)
 		else:
-			
-			print json.write({'progres': render.ajax_progres(
-				progres.msgs,
-				progres.level,
-				[x for x in xrange(len(progres.msgs))]
-			)})
+			webutils.print_page(
+				json.write({'progres': render.ajax_progres(
+					progres.msgs,
+					progres.level,
+					[x for x in xrange(len(progres.msgs))]
+				)})
+			)
 
 if __name__=='__main__':
 	main()
