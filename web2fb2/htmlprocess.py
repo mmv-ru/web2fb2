@@ -5,6 +5,7 @@ import os
 
 import ngram
 from BeautifulSoup import BeautifulSoup
+from lxml import etree
 
 import html5lib
 from html5lib import treebuilders
@@ -13,6 +14,10 @@ import yah2fb
 import h2fb
 
 import log
+
+SCHEMA_DIR = 'schemas'
+SCHEMA_MAIN = 'FictionBook2.21.xsd'
+
 
 def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 
@@ -59,8 +64,6 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 		descr = mp.get_descr()
 		params['file_out'].close()
 		log.debug('End of h2fb process')
-		
-		return descr
 	
 	else:
 		params = yah2fb.params_()
@@ -79,10 +82,31 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 		out_data = rez['data']
 		descr = rez['descr']
 		params.file_out.close()
-		
 		log.debug('End of yah2fb process')
 		
-		return descr
+	valid = check_xml_valid(rez_file)
+	return descr, valid
+
+def check_xml_valid(f_name):
+	'''
+	проверка валидности xml
+	'''
+	schema_doc = etree.parse(os.path.join(SCHEMA_DIR, SCHEMA_MAIN))
+	schema = etree.XMLSchema(schema_doc)
+	try:
+		doc = etree.parse(f_name)
+		schema.assertValid(doc)
+	except etree.DocumentInvalid, er:
+		log.info('fb2 not valid: %s' % str(er))
+		return {'is_valid':False, 'msg':str(er)}
+	except etree.XMLSyntaxError, er:
+		log.info('fb2 syntax error: %s' % str(er))
+		return {'is_valid':False, 'msg':str(er)}
+	else:
+		log.info('fb2 valid')
+		return {'is_valid':True, 'msg':''}
+	
+
 
 def detect_lang(data):
 	'''

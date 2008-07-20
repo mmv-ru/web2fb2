@@ -119,7 +119,8 @@ def process_images(data, source_folder, url):
 				img_name = imgs_list[new_url]
 			else:
 				#генерим имя картинки
-				img_name = "img" + md5.new(str(random.random())).hexdigest()[:10]				
+				img_name = "img" + md5.new(str(random.random())).hexdigest()[:10]
+				#img_name = md5.new(str(random.random())).hexdigest()[:10]
 				#заносим в словарь урл и имя файла
 				imgs_list[new_url] = img_name
 				

@@ -2,7 +2,10 @@
 #coding=utf-8
 
 import time
-import sqlite3
+try:
+	import sqlite3 as sqlite
+except ImportError:
+	import pysqlite2.dbapi2 as sqlite
 import sys
 import pickle
 
@@ -31,7 +34,7 @@ class sess(object):
 		'''
 		соединяемся с БД
 		'''
-		self.con = sqlite3.connect(self.sess_path)#, isolation_level=None)
+		self.con = sqlite.connect(self.sess_path)#, isolation_level=None)
 		self.cur = self.con.cursor()
 		#если че не так с структурой БД - создаем новую
 		self.cur.execute(

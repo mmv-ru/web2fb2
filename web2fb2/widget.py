@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.5
 #coding=utf-8
 
 import cgi, cgitb
@@ -150,7 +150,9 @@ def ajax():
 							stat.img,
 							stat.path + '/' + stat.file_name,
 							stat.file_name,
-							stat.file_size//1024
+							stat.file_size//1024,
+							stat.valid['is_valid'],
+							stat.valid['msg']
 						),
 						'descr':{
 							'title':stat.descr.title.encode('UTF-8'),
@@ -171,7 +173,7 @@ def ajax():
 					progres.level,
 					[x for x in xrange(len(progres.msgs))],
 					progres.level + 1,
-					len(progres.msgs) + 1
+					len(progres.msgs)
 				)})
 			)
 

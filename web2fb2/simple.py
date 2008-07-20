@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python2.5
 #coding=utf-8
 
 import cgi, cgitb
@@ -16,7 +16,6 @@ render = web.template.render('templates/')
 import webutils
 
 import process
-import sessions
 import fb_utils
 import prior
 
@@ -110,7 +109,9 @@ def main():
 					stat.img,
 					stat.path + '/' + stat.file_name,
 					stat.file_name,
-					stat.file_size//1024
+					stat.file_size//1024,
+					stat.valid['is_valid'],
+					stat.valid['msg']
 				)
 				descr_html = render.simple_descr(
 					stat.descr.title,

@@ -565,7 +565,6 @@ class MyHTMLParser(SGMLParser):
         self.mark_start_tag('p')
 
     def do_img(self, attrs):
-        time.sleep(0.005)
         ''' Handle images '''
         if self.params['skip-images']:
             return
@@ -784,7 +783,6 @@ class MyHTMLParser(SGMLParser):
         out_tmp = ''
         
         for i in xrange(len(self.out)):
-            time.sleep(0.005)
             is_new_line = True
 
             if i >= (len(self.out) -1 ):
