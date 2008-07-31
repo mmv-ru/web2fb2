@@ -1,12 +1,17 @@
 $def with (url, is_img, doit)
-    <table>
+
+	
+	<table id = 'urls'>
       <tr>
         <td><strong>Url:</strong> </td>
-        <td><input name="weburl" id="weburl" type="text" size="75" maxlength="256" value="$url" />
+        <td><input name="url" id="url" type="text" size="75" maxlength="256" value="$url" />
         </td>
-        <td><input name="" type="submit" value=" Do "/>
-        </td>
+		<td id = 'addurl'>[+]</td>
+        <td id = 'remurl'>[-]</td>
       </tr>
+	<table>
+	
+	<table id = 'params'>
       <tr>
         <td></td>
         <td>
@@ -21,12 +26,6 @@ $else:
 $if doit:
     <input type="hidden" id="doit" value = "true"/>
 
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td><input name="yah2fb" id='yah2fb' type="checkbox" value="1">
-          yet another h2fb engine</td>
-        <td></td>
+        <td><input name="" type="submit" value=" Do "/></td>
       </tr>
     </table>

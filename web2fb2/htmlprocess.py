@@ -3,9 +3,11 @@ import time
 import random
 import os
 
+import codecs
+
 import ngram
 from BeautifulSoup import BeautifulSoup
-from lxml import etree
+#from lxml import etree
 
 import html5lib
 from html5lib import treebuilders
@@ -19,7 +21,7 @@ SCHEMA_DIR = 'schemas'
 SCHEMA_MAIN = 'FictionBook2.21.xsd'
 
 
-def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
+def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 
 	"""
 	преобразрвание html в fb2, c определением языка и поддержкой нескольких движков
@@ -31,21 +33,21 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 	
 	"""
 	
-	data = file(source_file).read().decode('UTF-8')
 	
+
 	log.debug("prs y %s i %s" % (is_yah2fb, is_img) )
 	descr.id = 'web2fb2_%s_%08i' % (time.strftime('%Y%m%d%H%M'),  random.randint(0, 9999999999))
 	descr.program_used = 'http://web2fb2.net/'
 	
-	if descr.lang == descr.SELFDETECT:
+	if descr.selfdetect:
 			#детектор языка
 			log.debug('Detecting language')
+			data = codecs.open(source_files[0], 'r', 'utf-8').read()
 			descr.lang = detect_lang(data)
 			log.info('Detected language: %s' % descr.lang)
 			
 	if not is_yah2fb:
 		params = h2fb.default_params.copy()
-		params['data'] = data.encode('utf8')
 		params['verbose'] = 1
 		params['encoding-from'] = 'UTF-8'
 		params['encoding-to'] = 'UTF-8'
@@ -56,7 +58,7 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 		params['descr'] = descr
 		params['informer'] = lambda msg: log.debug('h2fb ' + msg.strip()) #делаем вывод сообщений от h2fb2 в лог
 		params['file_out'] = file(rez_file, 'w')
-		params['source_file_path'] = os.path.split(source_file)[0]
+		params['source_file_path'] = source_files
 		
 		log.debug('Start h2fb process')
 		mp = h2fb.MyHTMLParser()
@@ -84,8 +86,9 @@ def do(source_file, descr, rez_file, progres, is_yah2fb = False, is_img = True):
 		params.file_out.close()
 		log.debug('End of yah2fb process')
 		
-	valid = check_xml_valid(rez_file)
-	return descr, valid
+	#valid = check_xml_valid(rez_file)
+	#return descr, valid
+	return descr, {'is_valid':True, 'msg':''}
 
 def check_xml_valid(f_name):
 	'''

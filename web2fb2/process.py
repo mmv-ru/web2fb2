@@ -37,7 +37,7 @@ class web_params(object):
 	класс, контейнер параметров, передаваемых в обратку из веб-интерфейса
 	"""
 	def __init__(self):
-		self.url = ''
+		self.urls = []
 		self.is_img = ''
 		self.is_zip = True
 		self.descr = None
@@ -50,7 +50,7 @@ class ebook_stat_(object):
 	def __init__(self):
 		self.file_size = 0
 		self.work_time = 0.0
-		self.url = ''
+		self.urls = []
 		self.path_with_file = ''
 		self.file_name = '' 
 		self.img = False
@@ -69,7 +69,6 @@ class ProgError(Exception):
 	объект - исключение при обработке
 	
 	'''
-
 	def __init__(self, value = 'Progress Error'):
 		self.value = value
 	def __str__(self):
@@ -88,7 +87,7 @@ def clean_up():
 	#удаляем старые папки с книжками
 	l = lock.lock_('book')
 	clean_folder(EBOOKZ_PATH, CLEAN_TIME)
-	l.unlock()	
+	l.unlock()
 	
 	#удаляем временные файлы
 	l = lock.lock_('temp')
@@ -187,43 +186,44 @@ def do(params, sess, ajax = False):
 		
 		#собственно сам процесс
 		try:
-			#создаем имя для папки, в которую скачивается страница и картинки. имя папки однозначно отображает параметры страницы
-			raw_name = md5.new(str(pickle.dumps([params.url, params.is_img]))).hexdigest() 
-			raw_folder = os.path.join(RAW_PATH, raw_name)
-			raw_path = os.path.join(raw_folder, 'html.html')
+			raw_paths = []
+			for url in params.urls:
+				#создаем имя для папки, в которую скачивается страница и картинки. имя папки однозначно отображает параметры страницы
+				raw_name = md5.new(str(pickle.dumps([url, params.is_img]))).hexdigest()
+				raw_folder = os.path.join(RAW_PATH, raw_name)
+				raw_paths.append(os.path.join(raw_folder, 'html.html'))
 			
-			
-			#если такая папка уже есть - нафиг работать, пользуемся готовым
-			l = lock.lock_('raw')
-			if check_folder(raw_folder):
-				l.unlock()
+				#если такая папка уже есть - нафиг работать, пользуемся готовым
+				l = lock.lock_('raw')
+				if check_folder(raw_folder):
+					l.unlock()
 				
-			else:
-				l.unlock()
+				else:
+					l.unlock()
 				
-				# если халявы нет, придется все делать с нуля
-				#созаем рандомное имя для папки
-				temp_name = md5.new(str(random.random())).hexdigest()[:10]
-				temp_folder = os.path.join(TEMP_PATH, temp_name)
-				temp_path = os.path.join(temp_folder, 'html.html')
+					# если халявы нет, придется все делать с нуля
+					#созаем рандомное имя для папки
+					temp_name = md5.new(str(random.random())).hexdigest()[:10]
+					temp_folder = os.path.join(TEMP_PATH, temp_name)
+					temp_path = os.path.join(temp_folder, 'html.html')
 			
-				l = lock.lock_('temp')
-				os.mkdir(temp_folder)
-				l.unlock()
+					l = lock.lock_('temp')
+					os.mkdir(temp_folder)
+					l.unlock()
 			
-				#запускаем скачку страницы и разные предобработки
-				data = webprocess.do(params.url, params.is_img, temp_folder, progres)
-				file(temp_path, 'w').write(data.encode('UTF-8'))
+					#запускаем скачку страницы и разные предобработки
+					data = webprocess.do(url, params.is_img, temp_folder, progres)
+					file(temp_path, 'w').write(data.encode('UTF-8'))
 			
-				# пытаемся перенести временную папку в папку в которую все скачивается
-				l = lock.lock_("temp")
-				l1 = lock.lock_("raw")
-				log.debug('lock2')
-				try_move_folder(temp_folder, raw_folder)
-				l1.unlock()
-				l.unlock()
+					# пытаемся перенести временную папку в папку в которую все скачивается
+					l = lock.lock_("temp")
+					l1 = lock.lock_("raw")
+					log.debug('lock2')
+					try_move_folder(temp_folder, raw_folder)
+					l1.unlock()
+					l.unlock()
 			
-			params.descr.url = params.url
+			params.descr.urls = params.urls
 			
 			#data = file(raw_path).read().decode('UTF-8')
 			ebook_tmp_path = os.path.join(ebook_folder, '.ebook.fb2') #временное имя книги, вместе с папкой
@@ -232,15 +232,19 @@ def do(params, sess, ajax = False):
 			progres.level = 3
 			progres.save()
 			log.debug('start html process')
-			descr, valid = htmlprocess.do(raw_path, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img) #процесс перевода html в книгу
+			descr, valid = htmlprocess.do(raw_paths, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img) #процесс перевода html в книгу
 			log.debug('End of html process')
 			
 			#создаем имя
-			ebook_name = gen_name('_'.join((descr.author_last, descr.author_first, descr.title )))
+			auths_str = '_'.join([ auth['last'] + '_' + auth['first'] for auth in descr.authors])
+			
+			log.debug('book_auth_str %s' % auths_str.encode('UTF8'))
+			log.debug('book_title %s' % descr.title.encode('UTF8')) 
+			ebook_name = gen_name('_'.join((auths_str, descr.title )))
 			if ebook_name:
 				ebook_path = os.path.join(ebook_folder, ebook_name + '.fb2')
 			else:
-				ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.url)[1][:48] + '.fb2')
+				ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.urls[0])[1][:64] + '.fb2')
 
 			#переименовываем книгу из временного имени в новое
 			os.rename(ebook_tmp_path, ebook_path)
@@ -253,7 +257,7 @@ def do(params, sess, ajax = False):
 				
 			#создаем и заполняем объект реузльтатов.
 			ebook_stat = ebook_stat_()
-			ebook_stat.url = params.url
+			ebook_stat.urls = params.urls
 			ebook_stat.path = ebook_folder
 			ebook_stat.descr = descr
 			ebook_stat.file_name = os.path.split(ebook_path)[1]

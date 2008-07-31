@@ -1,8 +1,4 @@
-$def with (url, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg)
+$def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg)
 <b>Download link: <br/></b><a href = '$file_url'>$file_name</a> - $file_size KB<br />
 <br />
-$if valid:
-	<span id='valid_fb2'>&nbsp;valid FB2&nbsp; </span>
-$else:
-	<span id='invalid_fb2' title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
 <br />

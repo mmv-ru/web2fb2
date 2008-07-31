@@ -71,10 +71,7 @@ def correct(data):
 	
 	document = html5lib.HTMLParser().parse(data)
 	tokens = html5lib.treewalkers.getTreeWalker('simpleTree')(document)
-	out_data = ''.join(html5lib.serializer.HTMLSerializer(omit_optional_tags=False, quote_attr_values = True).serialize(tokens))
-	
-	file('in.htm', 'w').write(data.encode('UTF8'))
-	file('out.htm', 'w').write(out_data.encode('UTF8'))
+	out_data = ''.join(html5lib.serializer.HTMLSerializer(omit_optional_tags = False, quote_attr_values = True).serialize(tokens))
 	
 	log.debug('end of html correct')
 	return out_data

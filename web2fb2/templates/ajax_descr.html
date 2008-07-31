@@ -12,15 +12,10 @@ $def with (title, author_first, author_middle, author_last, genres, cur_genre, l
         <td>Title:</td>
         <td colspan="3"><input class='descr' type="text" name="title" id="title" size="74" maxlength="256" value = '$title' /></td>
       </tr>
-      <tr>
-        <td>Author:</td>
-        <td><input class='descr' type="text" name="author_first" id="author_first" size="20" maxlength="256" value = '$author_first'/><br />
-          <label style="font-size:x-small">first name</label></td>
-        <td><input class='descr' type="text" name="author_middle" id="author_middle" size="20" maxlength="256" value = '$author_middle' /><br />
-          <label style="font-size:x-small">middle name</label></td>
-        <td><input class='descr' type="text" name="author_last"  id="author_last" size="20" maxlength="256" value = '$author_last' /><br />
-          <label style="font-size:x-small">last name</label></td>
-      </tr>
+	</table>
+	<table id = 'authors'>
+	</table>
+	<table>
       <tr>
         <td>Genre:</td>
         <td colspan="2"><select name="genre" id="genre" class='descr'>

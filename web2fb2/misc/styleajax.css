@@ -22,8 +22,16 @@ body {
 	border-top: solid 1px #c4c4c4;
 }
 
-#url {
+#divurl {
 	padding: 5px 5px 5px 5px;
+}
+
+#params {
+	width:100%;
+}
+
+#addurl, #remurl, #addaut, #remaut{
+	cursor: pointer;
 }
 
 #descr_div {

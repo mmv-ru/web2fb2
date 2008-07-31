@@ -1,20 +1,18 @@
 # -*- coding: UTF-8 -*-
 
 class description(object):
-    SELFDETECT = [['selfdetect']]
     
     def __init__(self):
         
-        self.author_first = u''
-        self.author_middle = u''
-        self.author_last = u''
+        self.authors = []
         self.title = u''
         self.genre = u''
         self.lang = u''
-        self.src_url = None
+        self.urls = []
         self.program_info = None
         self.id = u''
         self.lang = u''
+        self.selfdetect = True
 
 class genres(object):
     def __init__(self):

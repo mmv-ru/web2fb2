@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python2.4
 #coding=utf-8
 
 import cgi, cgitb

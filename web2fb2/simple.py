@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python2.4
 #coding=utf-8
 
 import cgi, cgitb
@@ -18,6 +18,7 @@ import webutils
 import process
 import fb_utils
 import prior
+import urlparse
 
 
 def main():
@@ -37,20 +38,23 @@ def main():
 	
 	#пытаемся получить получить переменные из формы
 	form = cgi.FieldStorage()
-	url = form.getvalue('url')
 	
-	set_descr = form.getvalue('set_descr') #флаг, что надо передается описание
+	urls = []
 	
-	log.debug('Try to get url: %s' % url)
-
-	if not url:
+	for url in form.getlist('url'):
+		if urlparse.urlparse(url)[1]:
+			urls.append(url)
+	
+	if not urls:
 		webutils.print_page( render.simple_base(render.simple_form()) )
+		
 	else:
-		log.info('We get url: %s' % url)
+		log.info('We get urls: %s' % urls)
 		
 		
 		params = process.web_params()
-		params.url = form.getvalue('url', '')
+		
+		params.urls = urls
 		
 		if form.getvalue('img', False):
 			params.is_img = True
@@ -58,33 +62,69 @@ def main():
 		if form.getvalue('yah2fb', False):
 			params.yah2fb = True
 		
-		log.info('Set descr for url %s' % url)
+		log.info('Set descr for urls %s' % urls)
 		#заполняем описани
 		
 		descr = fb_utils.description()
 		
+		set_descr = form.getvalue('set_descr') #флаг, что надо передается описание
+		
 		if set_descr:
-			descr.author_first = form.getvalue('author_first', '').decode('UTF-8')
-			descr.author_middle = form.getvalue('author_middle', '').decode('UTF-8')
-			descr.author_last = form.getvalue('author_last', '').decode('UTF-8')
+			descr.selfdetect = False
+			
+			author_first_0 = form.getvalue('author_first_0', '').decode('UTF-8')
+			author_middle_0 = form.getvalue('author_middle_0', '').decode('UTF-8')
+			author_last_0 = form.getvalue('author_last_0', '').decode('UTF-8')
+			
+			if author_first_0 or author_middle_0 or author_last_0:
+				descr.authors.append(
+					{
+						'first': author_first_0,
+						'middle': author_middle_0,
+						'last': author_last_0
+					}
+				)
+			
+			author_first_1 = form.getvalue('author_first_1', '').decode('UTF-8')
+			author_middle_1 = form.getvalue('author_middle_1', '').decode('UTF-8')
+			author_last_1 = form.getvalue('author_last_1', '').decode('UTF-8')
+			
+			if author_first_1 or author_middle_1 or author_last_1:
+				descr.authors.append(
+					{
+						'first': author_first_1,
+						'middle': author_middle_1,
+						'last': author_last_1
+					}
+				)
+			
+			author_first_2 = form.getvalue('author_first_2', '').decode('UTF-8')
+			author_middle_2 = form.getvalue('author_middle_2', '').decode('UTF-8')
+			author_last_2 = form.getvalue('author_last_2', '').decode('UTF-8')
+			
+			if author_first_2 or author_middle_2 or author_last_2:
+				descr.authors.append(
+					{
+						'first': author_first_2,
+						'middle': author_middle_2,
+						'last': author_last_2
+					}
+				)
+			
+			
 			descr.title = form.getvalue('title', '').decode('UTF-8')
 			descr.genre = form.getvalue('genre', '').decode('UTF-8')
 			descr.lang = form.getvalue('lang', '').decode('UTF-8')
 
 		else:
-			descr.author_first = descr.SELFDETECT
-			descr.author_middle = descr.SELFDETECT
-			descr.author_last = descr.SELFDETECT
-			descr.title = descr.SELFDETECT
-			descr.genre = descr.SELFDETECT
-			descr.lang = descr.SELFDETECT
+			descr.selfdetect = True
 			
-		descr.url = params.url
+		descr.urls = params.urls
 			
 		params.descr = descr
 		
 		#запускаем сам процесс, перехватываем все неперехваченые ошибки в лог
-		log.debug('url: %s Start process' % url)
+		log.debug('urls: %s Start process' % urls)
 		try:
 			progres = process.do(params, sid)
 		except process.SessRet, er:
@@ -96,7 +136,7 @@ def main():
 				webutils.print_page( render.simple_base( render.simple_error(str(er)) ) )
 	
 		else:
-			log.debug('url: %s Stop process' % url)
+			log.debug('urls: %s Stop process' % urls)
 			
 			if progres.error:
 				webutils.print_page( render.simple_base( render.simple_error(str(progres.error)) ) )
@@ -104,7 +144,7 @@ def main():
 				stat = progres.done
 			
 				result_html = render.simple_result(
-					stat.url,
+					stat.urls,
 					'%.1f' % stat.work_time,
 					stat.img,
 					stat.path + '/' + stat.file_name,
@@ -115,14 +155,14 @@ def main():
 				)
 				descr_html = render.simple_descr(
 					stat.descr.title,
-					stat.descr.author_first,
-					stat.descr.author_middle,
-					stat.descr.author_last,
+					stat.descr.authors,
+					len(stat.descr.authors),
 					fb_utils.genres().get_genres_descrs(),
 					stat.descr.genre,
 					stat.descr.lang,
 					stat.img,
-					stat.url
+					stat.urls,
+					[i for i in xrange(len(stat.urls))]
 				)
 				webutils.print_page( render.simple_base(result_html + descr_html) )
 			

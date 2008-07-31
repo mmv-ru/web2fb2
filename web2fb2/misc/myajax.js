@@ -1,3 +1,27 @@
+function addaut(obj)
+	{
+		if (! $("input", $(obj).parent()).attr('disabled'))
+			add_author($('input:eq(0)', $(obj).parent()).val(), $('input:eq(1)', $(obj).parent()).val(), $('input:eq(2)', $(obj).parent()).val())
+	}
+	
+function remaut(obj)
+	{
+		if (! $("input", $(obj).parent()).attr('disabled'))
+			if( $("#authors tr").length > 1)
+				$(obj).parent().remove();
+	}
+	
+	function add_author(first, middle, last)
+	{
+		id = 0
+		if ($("#authors tr:last input").attr('name'))
+			id = 1 + parseInt($("#authors tr:last input").attr('name').split('|')[1]);
+		
+		$("#authors").append("<tr><td>Author:</td><td><input class='descr' type='text' name='author_first|" + id +"'  size='20' maxlength='256' value = '" + first + "'/><br /><label style='font-size:x-small'>first name</label></td><td><input class='descr' type='text' name='author_middle|" + id +"' size='20' maxlength='256' value = '" + middle + "' /><br /><label style='font-size:x-small'>middle name</label></td><td><input class='descr' type='text' name='author_last|" + id +"' size='20' maxlength='256' value = '" + last + "' /><br /><label style='font-size:x-small'>last name</label></td><td id ='addaut' onClick = 'addaut(this)'>[+]<br />&nbsp;</td><td id ='remaut' onClick = 'remaut(this)'>[-]<br />&nbsp;</td></tr>")
+		
+	}
+
+
 $(document).ready(function(){
 	
 	
@@ -13,12 +37,31 @@ $(document).ready(function(){
 	$(".try").hide()
 	$(".cancel").hide()
 	
+	add_author('', '', '')
+	
 	autodetect_change()
+	
 	
 
 	$("#descr_tab").click(function(){
 		$("#descr_div").slideToggle("fast")
 	});
+	
+	$("#addurl").click(function(){
+		
+		if (! $("input", $(this).parent()).attr('disabled'))
+			if( $("#urls tr").length < 5)
+				$(this).parent().clone(true).appendTo($("#urls"));
+	});
+	
+	$("#remurl").click(function(){
+		
+		if (! $("input", $(this).parent()).attr('disabled'))
+			if( $("#urls tr").length > 1)
+				$(this).parent().remove();
+	});
+	
+	
 	
 	$("#descr_div #autodetect").change(
 		function(){
@@ -33,6 +76,7 @@ $(document).ready(function(){
 		}
 	);
 	
+	
 	$("form").submit(
 		function(){
 			$(".error").html('')
@@ -45,7 +89,6 @@ $(document).ready(function(){
 			$(".progres").show('')
 			$(".progres").html('<center><img src = "/misc/progress_big.gif" /></center>')
 			
-			work_disable();
 			CANCEL = false;
 			
 			$(".error").ajaxError(function(event, request, settings){
@@ -58,6 +101,8 @@ $(document).ready(function(){
 			return false
 		}
 	)
+	
+	
 	
 	function autodetect_change()
 	{
@@ -80,6 +125,8 @@ $(document).ready(function(){
 		autodetect_change()
 	}
 	
+	
+	
 	function get_ans()
 	{
 
@@ -89,6 +136,12 @@ $(document).ready(function(){
 		}
 		else
 		{
+			work_enable();
+			var str = $("#f").serialize()
+			work_disable();
+			$.getJSON("?ajax=1&" +str, onAjaxSuccess)
+			
+			/*
 			$.getJSON(
 				"",
 				{
@@ -97,6 +150,7 @@ $(document).ready(function(){
 					'url': $('#weburl').val(),
 					'img': $('#img').attr('checked'),
 					'yah2fb': $('#yah2fb').attr('checked'),
+					'json': $("#f").serializeArray(),
 					
 					'autodetect': $('#autodetect').attr('checked'),
 					'title': $('#title').val(),
@@ -108,6 +162,8 @@ $(document).ready(function(){
 				},
 				onAjaxSuccess
 			)
+			*/
+			
 		}
 	}
 	
@@ -147,11 +203,16 @@ $(document).ready(function(){
 			$(".result").html(obj.result)
 			
 			$('#title').val(obj.descr['title'])
-			$('#author_first').val(obj.descr['author_first'])
-			$('#author_middle').val(obj.descr['author_middle'])
-			$('#author_last').val(obj.descr['author_last'])
 			$('#genre').val(obj.descr['genre']);
 			$('#lang').val(obj.descr['lang'])
+			
+			authors = obj.descr['authors']
+			$("#authors").empty()
+			
+			for(i=0; i< authors.length; i++)
+				add_author(authors[i]['first'], authors[i]['middle'], authors[i]['last']);
+			
+			autodetect_change()
 		}
 		else if(obj.progres)
 		{

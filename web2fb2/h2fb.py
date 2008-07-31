@@ -56,6 +56,7 @@ import shutil
 import cStringIO
 import fb_utils
 import time
+import codecs
 
 version='0.1.1'
 
@@ -269,7 +270,7 @@ class MyHTMLParser(SGMLParser):
         self.notes=[]                   # notes
         self.descr={}                   # description
         self.informer=None              # informer (for out messages)
-        self.rez_descr = fb_utils.description()
+        
         
     def handle_charref(self, name):
         """Handle decimal escaped character reference, does not handle hex.
@@ -289,6 +290,7 @@ class MyHTMLParser(SGMLParser):
         self.params=params
         self._TAGS = _TAGS
         
+        self.rez_descr = fb_utils.description()
         self.binary = binary()
         
         if 'informer' in params:
@@ -304,7 +306,6 @@ class MyHTMLParser(SGMLParser):
         secs = time.time()
         self.msg('HTML to FictionBook converter, ver. %s\n' % version)
         self.msg("Reading data...\n")
-        data=params['data']
         ##
         ## use basename for href finding, could change regex instead?
         #self.msg('process:'+unicode(params['file-name'], params['sys-encoding']))
@@ -316,38 +317,54 @@ class MyHTMLParser(SGMLParser):
             self.header_re = params['header-re'].strip() and re.compile(params['header-re'])
         except:
             self.header_re = None
-        if not data:
-            return ''
-        self.msg('Preprocessing...\n')
-        data = self.pre_process(data)
-        self.msg('Parsing...\n')
-        self.feed(data+'</p>')
-        self.close()
-        self.msg('Formatting...\n')
-        self.detect_epigraphs()
-        self.detect_verses()
-        self.detect_paragraphs()
-        self.msg('Postprocessing...\n')
-        self.post_process()
-        self.msg('Building result document...\n')
-                   
+        
+        outs = []
+        descrs = []
+        for source_file_path in params['source_file_path']:
+            
+            self.reset()
+            
+            self.source_file_path = source_file_path
+            
+            data = codecs.open(source_file_path, 'r', 'utf-8').read()
+            
+            if not data:
+                return ''
+            self.msg('Preprocessing...\n')
+            data = self.pre_process(data)
+            self.msg('Parsing...\n')
+            self.feed(data+'</p>')
+            self.close()
+            self.msg('Formatting...\n')
+            self.detect_epigraphs()
+            self.detect_verses()
+            self.detect_paragraphs()
+            self.msg('Postprocessing...\n')
+            self.post_process()
+            
+            self.msg('Building result document...\n')
+            
+            outs.append(self.out)
+            descrs.append(self.descr)
+                       
         out = ('<?xml version="1.0" encoding="%s"?>\n' \
                    '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
                    self.params['encoding-to'] + \
-                   self.make_description() + \
-                    '<body>\n%s\n</body>\n' % self.out + \
+                   self.make_description(descrs) + \
+                   '<body>\n%s\n</body>\n' % ''.join(outs) + \
                     self.make_notes())
-        
+            
         out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", out)
         out = out.encode(self.params['encoding-to'],'xmlcharrefreplace')
-        
+            
+            
         params['file_out'].write(out)
-        
+
+            
         shutil.copyfileobj(self.binary.get(), params['file_out'])
-        #params['file_out'].write(self.binary.get())
-        
+            #params['file_out'].write(self.binary.get())
+            
         params['file_out'].write('</FictionBook>')
-        
         
         
         #self.out= ('<?xml version="1.0" encoding="%s"?>\n' \
@@ -574,7 +591,7 @@ class MyHTMLParser(SGMLParser):
             if attrname == 'src':
                 src = value
         if src:
-            temp_image_filename= os.path.join(self.params['source_file_path'], urllib.unquote(src))
+            temp_image_filename= os.path.join(os.path.split(self.source_file_path)[0], urllib.unquote(src))
             img = self.convert_image(temp_image_filename)#src.encode(self.params['sys-encoding']))
         
             if img:
@@ -716,41 +733,10 @@ class MyHTMLParser(SGMLParser):
     # --- Parsed data processing methods
     
     def pre_process(self, data):
-        '''
-        Processing data before parsing.
-        Return data converted to unicode. If conversion is impossible, return None.
-        If encoding not set, try detect encoding with module recoding from pETR project.
-        '''
-        encoding = self.params['encoding-from']
-        if not encoding:
-            try:
-                data=unicode(data,'utf8')
-                encoding = None         # No encoding more needed
-            except UnicodeError:
-                try:
-                    import recoding     # try import local version recoding
-                    encoding = recoding.GetRecoder().detect(data[:2000])
-                except ImportError:
-                    try:
-                        import petr.recoding as recoding # try import pETR's modyle
-                        encoding = recoding.GetRecoder().detect(data[:2000])
-                    except ImportError:
-                        encoding = None
-                if not encoding:
-                    encoding = "Windows-1251"
-                    self.msg("Recoding module not found. Use default encoding")
-        try:
-            if encoding:
-                data=unicode(data,encoding)
-                self.params['encoding-from'] = encoding
-        except:
-            data = None
-            self.msg("Encoding %s is not valid\n" % encoding)
-        if data:
-            data=data.replace(u'\x0e',u'<h6>').replace(u'\x0f',u'</h6>')
-            for i in u'\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x10\x11'\
-                    '\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f':
-                data = data.replace(i,u' ')
+        data=data.replace(u'\x0e',u'<h6>').replace(u'\x0f',u'</h6>')
+        for i in u'\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c\x10\x11'\
+                '\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f':
+            data = data.replace(i,u' ')
 
         return data
 
@@ -828,6 +814,12 @@ class MyHTMLParser(SGMLParser):
                 self.out='<section>\n'+self.out
         self.out+='\n</section>'
         self.out=_RE_EL.sub(r'\1',self.out)
+        
+        if self.out.startswith('<section>'):
+            title = 'title' in self.descr and self.descr['title'] or ''
+            if title:
+                self.out = '<section>' + '<title>' + title + '</title>' + self.out[len('<section>'):]
+
 
     def detect_headers(self, data):
         '''
@@ -1211,55 +1203,73 @@ class MyHTMLParser(SGMLParser):
     
     # --- Make out document methods
     
-    def make_description(self):
-
-        title = 'title' in self.descr and self.descr['title'] or ''
-        author = 'author' in self.descr and self.descr['author'] or ''
-        if not author and '.' in title :
-            point = title.index('.')
-            author = title[:point].strip()
-            title = title[point+1:].strip()
-        author = author.split()
-        first_name = author and author[0] or ''
-        middle_name = len(author) > 2 and author[1] or ''
-        last_name = len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
-
-        genre = fb_utils.genres().get_default()
+    def make_description(self, descrs):
         
-        if self.params['descr'].author_first != self.params['descr'].SELFDETECT:
-            first_name = self.params['descr'].author_first
-        if self.params['descr'].author_middle != self.params['descr'].SELFDETECT:
-            middle_name = self.params['descr'].author_middle
-        if self.params['descr'].author_last != self.params['descr'].SELFDETECT:
-            last_name = self.params['descr'].author_last
-        if self.params['descr'].title != self.params['descr'].SELFDETECT:
+        if self.params['descr'].selfdetect:
+            
+            titles = []
+            authors = []
+            
+            for descr in descrs:
+                title = 'title' in descr and descr['title'] or ''
+            
+                author = 'author' in descr and descr['author'] or ''
+                if not author and '.' in title :
+                    point = title.index('.')
+                    author = title[:point].strip()
+                    title = title[point+1:].strip()
+                author = author.split()
+            
+                a ={
+                        'first': author and author[0] or '',
+                        'middle': len(author) > 2 and author[1] or '',
+                        'last':  len(author) > 2 and author[2] or (len(author) > 1 and author[1] or '')
+                    }
+                
+                if a not in authors:
+                    authors.append(a)
+
+                
+                if title not in titles:
+                    titles.append(title)
+                
+            title = ' ||| '.join(titles)
+            
+            genre = fb_utils.genres().get_default()
+            
+        
+        else:
             title = self.params['descr'].title
-        if self.params['descr'].genre != self.params['descr'].SELFDETECT:
+            authors = self.params['descr'].authors
             genre = self.params['descr'].genre
         
+        annotations = []
+        for descr in descrs:
+            if descr.get('annot', ''):
+                annotations.append(descr.get('annot', ''))
+            
         
-        self.rez_descr.author_first = first_name
-        self.rez_descr.author_middle = middle_name
-        self.rez_descr.author_last = last_name
+        self.rez_descr.authors = authors
         self.rez_descr.title = title
         self.rez_descr.genre = genre
         
+        auth_str = ''
+        for author in authors:
+            auth_str += "<author>"
+            auth_str += "<first-name>%s</first-name>" % author['first']
+            auth_str += "<middle-name>%s</middle-name>" % author['middle']
+            auth_str += "<last-name>%s</last-name>" % author['last']
+            auth_str += "</author>\n"
         
         retv = '<description>\n'
-        
         #fill title-info
         retv += '<title-info>\n'
         retv += '<genre>%s</genre>\n' % genre
-        retv += '<author>'
-        retv += '<first-name>%s</first-name>' % first_name
-        retv += '<middle-name>%s</middle-name>' % middle_name
-        retv += '<last-name>%s</last-name>' % last_name
-        retv += '</author>\n'
+        retv += auth_str
         retv += '<book-title>%s</book-title>\n' % title
         
-        if 'annot' in self.descr:
-            if self.descr['annot']:
-                retv+='<annotation>%s</annotation>\n' % self.descr['annot']
+        #if annotations:
+        #    retv+='<annotation>%s</annotation>\n' %  '\n\n'.join(annotations)
         
         retv += '<lang>%s</lang>\n' % self.params['descr'].lang
         self.rez_descr.lang = self.params['descr'].lang
@@ -1273,8 +1283,8 @@ class MyHTMLParser(SGMLParser):
             retv += '<program-used>%s</program-used>\n' % self.params['descr'].program_used
         #retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
         retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
-        if self.params['descr'].src_url != None:
-            retv += '<src-url>%s</src-url>\n' % self.params['descr'].url
+        if self.params['descr'].urls:
+            retv += '<src-url>%s</src-url>\n' % ' '.join(self.params['descr'].urls)
         retv += '<id>%s</id>\n' % self.params['descr'].id
         retv += '<version>1.0</version>\n'
         retv += '</document-info>\n'
