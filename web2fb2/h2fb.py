@@ -367,32 +367,7 @@ class MyHTMLParser(SGMLParser):
         params['file_out'].write('</FictionBook>')
         
         
-        #self.out= ('<?xml version="1.0" encoding="%s"?>\n' \
-        #           '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
-        #           self.params['encoding-to'] + \
-        #           self.make_description() + \
-        #            '<body>\n%s\n</body>\n' % self.out + \
-        #            self.make_notes() + \
-        #            self.binary.get() + '</FictionBook>')
         
-        #bad! very bad!
-        #self.out = re.sub(r"(?sm)(<epigraph>\s*</epigraph>\s*)", r"", self.out)
-        
-        
-        #self.out = self.out.encode(self.params['encoding-to'],'xmlcharrefreplace')
-        
-        #self.out = (self.make_description() + \
-        #            '<body>%s</body>' % self.out + \
-        #            self.make_notes()).encode(self.params['encoding-to'],'xmlcharrefreplace')
-                    
-        #self.out = '<?xml version="1.0" encoding="%s"?>\n' \
-        #           '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink">\n' % \
-        #           self.params['encoding-to'] + self.out
-                   
-        #self.out = 'lol' + self.make_bins()
-
-        
-        #self.out += '</FictionBook>'
         
         self.msg("Total process time is %.2f secs\n" % (time.time() - secs))
         return True
@@ -1235,7 +1210,7 @@ class MyHTMLParser(SGMLParser):
                 
             title = ' ||| '.join(titles)
             
-            genre = fb_utils.genres().get_default()
+            genre = self.params['descr'].genre
             
         
         else:
@@ -1280,7 +1255,7 @@ class MyHTMLParser(SGMLParser):
         retv += '<document-info>\n'
         retv += '<author><nickname></nickname></author>\n'
         if self.params['descr'].program_info != None:
-            retv += '<program-used>%s</program-used>\n' % self.params['descr'].program_used
+            retv += '<program-used>%s</program-used>\n' % self.params['descr'].program_info
         #retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%d %B %Y'))
         retv += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
         if self.params['descr'].urls:

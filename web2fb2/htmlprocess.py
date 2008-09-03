@@ -7,7 +7,18 @@ import codecs
 
 import ngram
 from BeautifulSoup import BeautifulSoup
-#from lxml import etree
+
+BeautifulSoup.NESTABLE_TAGS['strong'] = []
+BeautifulSoup.NESTABLE_TAGS['b'] = []
+BeautifulSoup.NESTABLE_TAGS['i'] = []
+BeautifulSoup.NESTABLE_TAGS['em'] = []
+BeautifulSoup.NESTABLE_TAGS['var'] = []
+BeautifulSoup.NESTABLE_TAGS['cite'] = []
+BeautifulSoup.NESTABLE_TAGS['p'] = []
+BeautifulSoup.NESTABLE_TAGS['pre'] = []
+
+
+from lxml import etree
 
 import html5lib
 from html5lib import treebuilders
@@ -21,7 +32,7 @@ SCHEMA_DIR = 'schemas'
 SCHEMA_MAIN = 'FictionBook2.21.xsd'
 
 
-def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True):
+def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True, is_tab = False):
 
 	"""
 	преобразрвание html в fb2, c определением языка и поддержкой нескольких движков
@@ -62,33 +73,37 @@ def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True)
 		
 		log.debug('Start h2fb process')
 		mp = h2fb.MyHTMLParser()
-		out_data = mp.process(params)
+		mp.process(params)
 		descr = mp.get_descr()
 		params['file_out'].close()
 		log.debug('End of h2fb process')
 	
 	else:
 		params = yah2fb.params_()
-		params.data = data
+		params.source_files = source_files
 		if is_img:
 			params.skip_images = False
 		else:
 			params.skip_images = True
+			
+		if is_tab:
+			params.skip_tables = False
+		else:
+			params.skip_tables = True
+			
+			
 		params.descr = descr
-		params.file_out = file(rez_file, 'w')
-		params.source_file_path = os.path.split(source_file)[0]
+		params.file_out = rez_file
 		
 		log.debug('Start yah2fb process')
 		
-		rez = yah2fb.html2fb2().process(params)
-		out_data = rez['data']
-		descr = rez['descr']
-		params.file_out.close()
+		descr = yah2fb.htmls2fb2(params)
+		
 		log.debug('End of yah2fb process')
 		
-	#valid = check_xml_valid(rez_file)
-	#return descr, valid
-	return descr, {'is_valid':True, 'msg':''}
+	valid = check_xml_valid(rez_file)
+	return descr, valid
+	#return descr, {'is_valid':True, 'msg':''}
 
 def check_xml_valid(f_name):
 	'''

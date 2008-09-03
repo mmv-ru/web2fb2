@@ -18,6 +18,15 @@ import html5lib.treewalkers
 import html5lib.serializer
 
 from BeautifulSoup import BeautifulSoup
+BeautifulSoup.NESTABLE_TAGS['strong'] = []
+BeautifulSoup.NESTABLE_TAGS['b'] = []
+BeautifulSoup.NESTABLE_TAGS['i'] = []
+BeautifulSoup.NESTABLE_TAGS['em'] = []
+BeautifulSoup.NESTABLE_TAGS['var'] = []
+BeautifulSoup.NESTABLE_TAGS['cite'] = []
+BeautifulSoup.NESTABLE_TAGS['p'] = []
+BeautifulSoup.NESTABLE_TAGS['pre'] = []
+
 
 import log
 

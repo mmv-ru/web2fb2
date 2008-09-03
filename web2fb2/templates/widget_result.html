@@ -1,4 +1,8 @@
 $def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg)
 <b>Download link: <br/></b><a href = '$file_url'>$file_name</a> - $file_size KB <br />
+$if valid:
+	<span style="border: 2px solid #33CC00; background-color: #CCFF99;">&nbsp;valid FB2&nbsp; </span> 
+$else:
+	<span style="border: 2px solid #FF3333; background-color: #FF9999;" title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
 <br />
 <br />

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #coding=utf-8
 
 import cgi, cgitb
@@ -59,6 +59,9 @@ def main():
 		if form.getvalue('img', False):
 			params.is_img = True
 		
+		if form.getvalue('tab', False):
+			params.is_tab = True
+		
 		if form.getvalue('yah2fb', False):
 			params.yah2fb = True
 		
@@ -111,6 +114,9 @@ def main():
 					}
 				)
 			
+			if not descr.authors:
+				descr.authors.append(descr.def_author)
+			
 			
 			descr.title = form.getvalue('title', '').decode('UTF-8')
 			descr.genre = form.getvalue('genre', '').decode('UTF-8')
@@ -162,7 +168,9 @@ def main():
 					stat.descr.lang,
 					stat.img,
 					stat.urls,
-					[i for i in xrange(len(stat.urls))]
+					[i for i in xrange(len(stat.urls))],
+					stat.tab,
+					stat.yah2fb
 				)
 				webutils.print_page( render.simple_base(result_html + descr_html) )
 			

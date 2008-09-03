@@ -4,14 +4,16 @@ class description(object):
     
     def __init__(self):
         
+        self.def_author = {'first':'', 'middle':'', 'last':''}
         self.authors = []
         self.title = u''
-        self.genre = u''
+        self.genre = genres().get_default()
         self.lang = u''
         self.urls = []
         self.program_info = None
         self.id = u''
         self.lang = u''
+        self.version = u'1.0'
         self.selfdetect = True
 
 class genres(object):

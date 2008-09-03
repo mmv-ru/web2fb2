@@ -1,4 +1,4 @@
-$def with (url, is_img, doit)
+$def with (url, is_img, is_tab, doit)
 
 	
 	<table id = 'urls'>
@@ -22,6 +22,23 @@ $else:
 
           with images
         </td>
+		<td><td>
+	  </tr>
+      <tr>
+        <td></td>
+        <td>
+$if is_tab:
+    <input name="tab" id="tab" type="checkbox" value="1" checked>
+$else:
+    <input name="tab" id="tab" type="checkbox" value="1">
+
+          with tables
+        </td>
+		<td><td>
+	  </tr>
+	  <tr>
+	    <td></td>
+		<td><input name="yah2fb" id='yah2fb' type="checkbox" value="1">yet another h2fb engine</td>
 
 $if doit:
     <input type="hidden" id="doit" value = "true"/>

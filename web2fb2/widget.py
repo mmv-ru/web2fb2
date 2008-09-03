@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #coding=utf-8
 
 import cgi, cgitb
@@ -37,7 +37,7 @@ def base():
 
 	webutils.print_page(
 		render.widget_base(
-			render.widget_form('http://', True, False),
+			render.widget_form('http://', True, False, False),
 			render.widget_descr(
 				'',
 				'',
@@ -81,6 +81,11 @@ def ajax():
 		
 		if form.getvalue('img') == 'true':
 			params.is_img = True
+		
+		
+		if form.getvalue('tab') == 'true':
+			params.is_tab = True
+		
 			
 		if form.getvalue('yah2fb') == 'true':
 			params.yah2fb = True
@@ -106,7 +111,6 @@ def ajax():
 			descr.lang = form.getvalue('lang', '').decode('UTF-8')
 		
 		params.descr = descr
-		#log.debug(str(params.descr.genre))
 			
 		try:
 			progres = process.do(params, sid, True)

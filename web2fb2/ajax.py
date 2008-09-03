@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 #coding=utf-8
 
 import cgi, cgitb
@@ -39,7 +39,7 @@ def base():
 	
 	webutils.print_page(
 		render.ajax_base(
-			render.ajax_form('http://', True, False),
+			render.ajax_form('http://', True, False, False),
 			render.ajax_descr(
 				'',
 				'',
@@ -84,6 +84,9 @@ def ajax():
 		
 		if form.getvalue('img', ''):
 			params.is_img = True
+		
+		if form.getvalue('tab', ''):
+			params.is_tab = True
 			
 		if form.getvalue('yah2fb', ''):
 			params.yah2fb = True
@@ -123,6 +126,8 @@ def ajax():
 							'last': last
 						}
 					)
+			if not descr.authors:
+				descr.authors.append(descr.def_author)
 
 			descr.genre = form.getvalue('genre', '').decode('UTF-8')
 			descr.lang = form.getvalue('lang', '').decode('UTF-8')

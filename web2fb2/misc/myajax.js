@@ -50,7 +50,7 @@ $(document).ready(function(){
 	$("#addurl").click(function(){
 		
 		if (! $("input", $(this).parent()).attr('disabled'))
-			if( $("#urls tr").length < 5)
+			if( $("#urls tr").length < 10)
 				$(this).parent().clone(true).appendTo($("#urls"));
 	});
 	
