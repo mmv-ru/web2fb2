@@ -113,7 +113,7 @@ class fb2_(object):
 
 		self.f_out = file(f_name, 'wb')
 
-		self.soup = BS.BeautifulStoneSoup()
+		self.soup = BS.BeautifulStoneSoup(selfClosingTags=['image'])
 		body = BS.Tag(self.soup, 'body')
 		self.soup.append(body) #делаем склет для fb2 (вставляем тег боди, чтоб к нему все приклеивать)
 
@@ -453,7 +453,8 @@ class html2fb2(object):
 					if not self.skip_images:
 						src = tag.get('src', None)
 						#если у картинки есть выравнивание, значит она не inline
-						inline = not ( tag.get('align', None) in ('left', 'right') )
+						
+						inline = not ( tag.get('align', '').lower() in ('left', 'right') )
 						if src:
 							img_path = os.path.join( os.path.dirname(self.in_file), urllib.unquote(src) )
 							img = get_image( img_path )
@@ -506,10 +507,10 @@ if __name__ == '__main__':
 
 	params = params_()
 	params.skip_images = False
-	params.skip_tables = True
+	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
 	#params.source_files = [ 'html/mail.htm']
-	params.source_files = [ 'html/test.html']
+	params.source_files = [ 'html/html.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
