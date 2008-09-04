@@ -32,7 +32,7 @@ SCHEMA_DIR = 'schemas'
 SCHEMA_MAIN = 'FictionBook2.21.xsd'
 
 
-def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True, is_tab = False):
+def do(source_files, descr, rez_file, progres, is_old_h2fb2 = False, is_img = True, is_tab = False):
 
 	"""
 	преобразрвание html в fb2, c определением языка и поддержкой нескольких движков
@@ -46,7 +46,7 @@ def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True,
 	
 	
 
-	log.debug("prs y %s i %s" % (is_yah2fb, is_img) )
+	log.debug("prs y %s i %s" % (is_old_h2fb2, is_img) )
 	descr.id = 'web2fb2_%s_%08i' % (time.strftime('%Y%m%d%H%M'),  random.randint(0, 9999999999))
 	descr.program_used = 'http://web2fb2.net/'
 	
@@ -57,7 +57,7 @@ def do(source_files, descr, rez_file, progres, is_yah2fb = False, is_img = True,
 			descr.lang = detect_lang(data)
 			log.info('Detected language: %s' % descr.lang)
 			
-	if not is_yah2fb:
+	if is_old_h2fb2:
 		params = h2fb.default_params.copy()
 		params['verbose'] = 1
 		params['encoding-from'] = 'UTF-8'
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 		file("tmp/temp.htm").read().decode('UTF-8'),
 		descr = fb_utils.description(),
 		rez_file = file('tmp/temp.fb2', 'w'),
-		is_yah2fb = False,
+		old_h2fb2 = False,
 		is_img = False
 	)
 

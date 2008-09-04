@@ -62,8 +62,8 @@ def main():
 		if form.getvalue('tab', False):
 			params.is_tab = True
 		
-		if form.getvalue('yah2fb', False):
-			params.yah2fb = True
+		if form.getvalue('old_h2fb2', False):
+			params.old_h2fb2 = True
 		
 		log.info('Set descr for urls %s' % urls)
 		#заполняем описани
@@ -170,7 +170,7 @@ def main():
 					stat.urls,
 					[i for i in xrange(len(stat.urls))],
 					stat.tab,
-					stat.yah2fb
+					stat.old_h2fb2
 				)
 				webutils.print_page( render.simple_base(result_html + descr_html) )
 			

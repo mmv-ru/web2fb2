@@ -97,7 +97,7 @@ $(document).ready(function(){
 					'url': $('#weburl').val(),
 					'img': $('#img').attr('checked'),
 					'tab': $('#tab').attr('checked'),
-					'yah2fb': $('#yah2fb').attr('checked'),
+					'old_h2fb2': $('#old_h2fb2').attr('checked'),
 					
 					'autodetect': $('#autodetect').attr('checked'),
 					'title': $('#title').val(),

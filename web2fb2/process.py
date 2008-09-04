@@ -42,7 +42,7 @@ class web_params(object):
 		self.is_zip = True
 		self.is_tab = False
 		self.descr = None
-		self.yah2fb = False
+		self.old_h2fb2 = False
 		
 class ebook_stat_(object):
 	"""
@@ -56,7 +56,7 @@ class ebook_stat_(object):
 		self.file_name = '' 
 		self.img = False
 		self.tab = False
-		self.yah2fb = False
+		self.old_h2fb2 = False
 		self.descr = None
 		self.valid = None
 		
@@ -235,7 +235,7 @@ def do(params, sess, ajax = False):
 			progres.level = 3
 			progres.save()
 			log.debug('start html process')
-			descr, valid = htmlprocess.do(raw_paths, params.descr, ebook_tmp_path, progres, params.yah2fb, params.is_img, params.is_tab) #процесс перевода html в книгу
+			descr, valid = htmlprocess.do(raw_paths, params.descr, ebook_tmp_path, progres, params.old_h2fb2, params.is_img, params.is_tab) #процесс перевода html в книгу
 			log.debug('End of html process')
 			
 			#создаем имя
@@ -268,7 +268,7 @@ def do(params, sess, ajax = False):
 			ebook_stat.file_size = os.path.getsize(ebook_path) 
 			ebook_stat.img =  params.is_img
 			ebook_stat.tab =  params.is_tab
-			ebook_stat.yah2fb = params.yah2fb
+			ebook_stat.old_h2fb2 = params.old_h2fb2
 			ebook_stat.valid = valid
 			
 			progres.done = ebook_stat # сохраняем в прогрессе

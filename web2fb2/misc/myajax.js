@@ -61,7 +61,17 @@ $(document).ready(function(){
 				$(this).parent().remove();
 	});
 	
-	
+	$("#old_h2fb2").change(
+		function(){
+			if( $("#old_h2fb2").attr('checked') )
+			{
+				$("#tab").attr({disabled: true})
+				$("#tab").attr({checked: false})
+			}
+			else
+				$("#tab").attr({disabled: false})
+		}
+	);
 	
 	$("#descr_div #autodetect").change(
 		function(){
@@ -149,7 +159,7 @@ $(document).ready(function(){
 					
 					'url': $('#weburl').val(),
 					'img': $('#img').attr('checked'),
-					'yah2fb': $('#yah2fb').attr('checked'),
+					'old_h2fb2': $('#old_h2fb2').attr('checked'),
 					'json': $("#f").serializeArray(),
 					
 					'autodetect': $('#autodetect').attr('checked'),

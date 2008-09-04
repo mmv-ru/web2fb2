@@ -88,8 +88,8 @@ def ajax():
 		if form.getvalue('tab', ''):
 			params.is_tab = True
 			
-		if form.getvalue('yah2fb', ''):
-			params.yah2fb = True
+		if form.getvalue('old_h2fb2', ''):
+			params.old_h2fb2 = True
 		
 		descr = fb_utils.description()
 		descr.urls = params.urls
