@@ -115,7 +115,7 @@ body {
 .bottom {
 	left: 0px;
 	width: 100%;
-	font-size: 0.7em;
+	font-size: 0.8em;
 }
 
 
@@ -151,4 +151,30 @@ html, body {
 #invalid_fb2 {
   background-color: #FF9999;
   border: 2px solid #FF3333;
+}
+
+.preview_bar {
+	position: absolute;
+	overflow: auto;  
+	
+	top: 5em;
+	width: 40em;  
+	height: 30em; 
+	left: 50%;
+	margin-left: -20em;  
+	
+	border: 1px solid;
+	visibility: hidden;
+	background-color: #F0F0F0;
+	z-index: 2;
+}
+
+.preview_close {
+	cursor: pointer;
+}
+.preview_ifame {
+	margin: 0.3em;
+	width: 39em;
+	height: 27.5em;
+	background-color: #FFFFFF;
 }

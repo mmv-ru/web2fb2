@@ -24,6 +24,7 @@ import log
 import progress
 import webprocess
 import htmlprocess
+import preview
 
 import sess_wrap
 
@@ -252,6 +253,10 @@ def do(params, sess, ajax = False):
 			#переименовываем книгу из временного имени в новое
 			os.rename(ebook_tmp_path, ebook_path)
 			
+			#генерим preview
+			preview_path = os.path.join(ebook_folder, 'preview.html')
+			preview.proc(ebook_path, preview_path)
+			
 			#зипуем книгу
 			if params.is_zip:
 				log.debug("Start file zipping")
@@ -270,6 +275,7 @@ def do(params, sess, ajax = False):
 			ebook_stat.tab =  params.is_tab
 			ebook_stat.old_h2fb2 = params.old_h2fb2
 			ebook_stat.valid = valid
+			ebook_stat.preview_file = preview_path
 			
 			progres.done = ebook_stat # сохраняем в прогрессе
 		except Exception, er: # если в процессе всей этой деятельности произошла ошибка, возвращаем ошибку

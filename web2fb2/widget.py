@@ -145,7 +145,8 @@ def ajax():
 								stat.file_name,
 								stat.file_size//1024,
 								stat.valid['is_valid'],
-								stat.valid['msg']
+								stat.valid['msg'],
+								stat.preview_file
 							),
 							'descr':{
 								'title':stat.descr.title.encode('UTF-8'),
