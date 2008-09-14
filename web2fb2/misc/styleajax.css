@@ -158,10 +158,10 @@ html, body {
 	overflow: auto;  
 	
 	top: 5em;
-	width: 40em;  
+	width: 50em;  
 	height: 30em; 
 	left: 50%;
-	margin-left: -20em;  
+	margin-left: -25em;  
 	
 	border: 1px solid;
 	visibility: hidden;
@@ -174,7 +174,7 @@ html, body {
 }
 .preview_ifame {
 	margin: 0.3em;
-	width: 39em;
+	width: 49em;
 	height: 27.5em;
 	background-color: #FFFFFF;
 }
