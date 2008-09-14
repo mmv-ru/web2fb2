@@ -258,7 +258,7 @@ class html2fb2(object):
 		возвращает массив.
 		Если в массиве rez объекты из good_tags или image_outline, image_inline, string (если они включены), то они обораиваются.
 		если нет, то таг this_tag прерывается, в массив результата добавляется объект, который нельзя обернуть, а потом продолжаетсмя оборачивание
-		если тег, на котором прерывается, находится в bad_tags - на нем прерывание происходит, но он не добавляется в возвращаемы массив
+		если тег, на котором прерывается, находится в bad_tags - на нем прерывание происходит, но он не добавляется в возвращаемый массив
 		'''
 		soup = self.fb2s
 		
@@ -345,18 +345,20 @@ class html2fb2(object):
 								tr.append(r)
 				if tr:
 					table.append(tr)
-				coll.append(table)
+				if table.contents:
+					coll.append(table)
 				
 		elif tag.name == 'tr':
 			rez = self.proc_tag(tag)
 			#если внутри встретилось что-то кроме тегов td, th -  добавляем это что-то к результату 
-			if not self.check_tags(rez, ('td', 'th'), string = False):
-				coll += rez
+			if rez:
+				if not self.check_tags(rez, ('td', 'th'), string = False):
+					coll += rez
 
-			else: #иначе, добавляем tr, td к результату
-				tr = BS.Tag(soup, 'tr')
-				coll.append(tr)
-				coll += rez
+				else: #иначе, добавляем tr, td к результату
+					tr = BS.Tag(soup, 'tr')
+					coll.append(tr)
+					coll += rez
 			#надо заметить, что tr, td, th - располагаются не вложенно, а линейно в массиве.
 			# это будет учтено при обработке table
 				
@@ -402,6 +404,7 @@ class html2fb2(object):
 		for tag in parent_tag.contents: # перебираем дочерние таги
 			
 			if tag.__class__ == BS.NavigableString: #если строка (не коммент, не cdata а именно строка)
+				
 				s = fix_nbsp_bug(unicode(tag))#фикс бага с &nbsp;
 				text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
 				coll.append(text)
@@ -426,8 +429,7 @@ class html2fb2(object):
 				
 				elif tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'): #если заголовки - оформляем их жирным выделяем в отдельный параграф
 					rez = self.proc_tag(tag)
-					strong = self.break_tags('strong', rez, ('strong', 'emphasis', 'code'),image_outline = False, image_inline = True, string = True)
-					coll += self.break_tags('p', strong, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					coll = self.break_tags('subtitle', rez, ('strong', 'emphasis', 'code'),image_outline = False, image_inline = True, string = True)
 					
 				elif tag.name == 'br':
 					# если br - приходится временно ввести дополнительный тег br (потом его надо обязательно удалить)
@@ -510,7 +512,9 @@ if __name__ == '__main__':
 	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
 	#params.source_files = [ 'html/mail.htm']
-	params.source_files = [ 'html/html.html']
+	#params.source_files = [ 'html/in.html']
+	params.source_files = [ 'html/test.html']
+	#params.source_files = [ 'html/html.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
