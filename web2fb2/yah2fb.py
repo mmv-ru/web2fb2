@@ -429,7 +429,7 @@ class html2fb2(object):
 				
 				elif tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'): #если заголовки - оформляем их жирным выделяем в отдельный параграф
 					rez = self.proc_tag(tag)
-					coll = self.break_tags('subtitle', rez, ('strong', 'emphasis', 'code'),image_outline = False, image_inline = True, string = True)
+					coll += self.break_tags('subtitle', rez, ('strong', 'emphasis', 'code'),image_outline = False, image_inline = True, string = True)
 					
 				elif tag.name == 'br':
 					# если br - приходится временно ввести дополнительный тег br (потом его надо обязательно удалить)
@@ -511,10 +511,9 @@ if __name__ == '__main__':
 	params.skip_images = False
 	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
-	#params.source_files = [ 'html/mail.htm']
-	#params.source_files = [ 'html/in.html']
-	params.source_files = [ 'html/test.html']
 	#params.source_files = [ 'html/html.html']
+	#params.source_files = [ 'html/mail.htm']
+	params.source_files = [ 'html/test.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
