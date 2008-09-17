@@ -218,7 +218,7 @@ class html2fb2(object):
 		soup = self.fb2s
 		
 		#создаем секцию
-		section = BS.Tag(soup, 'section')
+		big_section = BS.Tag(soup, 'section')
 		
 		#пытаемся подобрать для секции загловок
 		try:
@@ -232,8 +232,7 @@ class html2fb2(object):
 				p = BS.Tag(soup, 'p')
 				p.append( BS.NavigableString( xmlescaper(title_text) ) )
 				title.append(p)
-				section.append(title)
-		
+				big_section.append(title)
 		
 		
 		#если есть текст тег body - начинаем обработку с него
@@ -246,11 +245,16 @@ class html2fb2(object):
 		
 		
 		#если надо, оборачиваем полученый результат в тег p и присоединяем к секции, во время оборачивания, стрипаем теги br
-		for r in self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br']):
-			section.append(r)
-			
+		#оборачиваем необренутые в p теги, стрипаем br
+		p_rez =  self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+		#оборачиваем необренутые в section теги, стрипаем sect
+		sects = self.break_tags('section', p_rez, ('strong', 'emphasis', 'code', 'p', 'table', 'title'), image_outline = True, image_inline = True, string = True, bad_tags = ['sect'])
+		
+		for sec in sects:
+			big_section.append(sec)
+		
 		#присоединяем секцию к fb2
-		self.fb2s.body.append(section)
+		self.fb2s.body.append(big_section)
 	
 	def break_tags(self, this_tag, rez, good_tags, image_outline = False, image_inline = True, string = True, bad_tags = ['br']):
 		'''
@@ -399,37 +403,72 @@ class html2fb2(object):
 		
 		'''
 		soup = self.fb2s
+		
 		coll = [] #возвращаемый массив
 		
-		for tag in parent_tag.contents: # перебираем дочерние таги
-			
+		if isinstance(parent_tag, list) or isinstance(parent_tag, list):
+			tags = parent_tag
+		else:
+			tags = parent_tag.contents
+		i = 0
+		while 1:
+			if i >= len(tags):
+				break
+			tag = tags[i]
+		
 			if tag.__class__ == BS.NavigableString: #если строка (не коммент, не cdata а именно строка)
 				
 				s = fix_nbsp_bug(unicode(tag))#фикс бага с &nbsp;
 				text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
 				coll.append(text)
+				i += 1
 
 			elif isinstance(tag, BS.Tag): #если тег
 			
 				if tag.name in ('script', 'form', 'style'): #теги, обработка внутри которых не производится
-					pass
+					i += 1
 				
 				elif tag.name in ('b', 'strong'): #жирный
 					rez = self.proc_tag(tag)
 					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					i += 1
 
 				elif tag.name == 'pre': #преформатированный текст
 					rez = self.proc_tag(tag)
 					coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					i += 1
 				
 				elif tag.name == 'p': #параграф
 					rez = self.proc_tag(tag)
 					#оборачиваем те теги, который можно обернуть, при этом стрипаем теги br
 					coll += self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+					i += 1
 				
 				elif tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'): #если заголовки - оформляем их жирным выделяем в отдельный параграф
-					rez = self.proc_tag(tag)
-					coll += self.break_tags('subtitle', rez, ('strong', 'emphasis', 'code'),image_outline = False, image_inline = True, string = True)
+					#ставим воспомагетальный тег - начало секции. Потом на обработке секции его надо обработать  и удалить
+					sect = BS.Tag(soup, 'sect')
+					coll.append(sect)
+					
+					#обрабатываем то, что внутри title
+					rez_title = self.proc_tag(tag)
+					#добавляем p
+					p_title = self.break_tags('p', rez_title, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+					#добавляем title
+					title_tags = self.break_tags('title', p_title, ('strong', 'emphasis', 'code', 'p'),image_outline = False, image_inline = True, string = True)
+					
+					#проверям, не была-ли title рассечена чем-нибудь (например таблица выдавилась или не inline картинка)
+					#в таком случае тоже надо добавить новую секцию
+					#и зафигачиваем все в возвращаемый массив
+					if title_tags:
+						coll.append(title_tags[0])
+						for title_tag in title_tags[1:]:
+							if isinstance(title_tag, BS.Tag) and (title_tag.name == 'title'):
+								sect = BS.Tag(soup, 'sect')
+								coll.append(sect)
+								coll.append(title_tag)
+							else:
+								coll.append(title_tag)
+					i += 1
 					
 				elif tag.name == 'br':
 					# если br - приходится временно ввести дополнительный тег br (потом его надо обязательно удалить)
@@ -438,17 +477,20 @@ class html2fb2(object):
 					rez = self.proc_tag(tag)
 					br = BS.Tag(soup, 'br')
 					coll.append(br)
+					i += 1
 
 				#если обрабатываем таблицы, теги ее обработки собраны в отдельной функции
 				#теги таблиц, собраны в отдельной функции
 				elif (not self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
 					coll += self.proc_tab_tags(tag)
+					i += 1
 					
 				#если таблицы не обрабатываем - на всякий случай ставим пробелы, чтоб буковки не склеивались
 				elif (self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
 					coll.append(BS.NavigableString(' '))
 					coll += self.proc_tag(tag)
 					coll.append(BS.NavigableString(' '))
+					i += 1
 					
 				elif tag.name == 'img':
 					#обрабатываем картинки
@@ -467,8 +509,12 @@ class html2fb2(object):
 								tag.inline = inline #добавляем к тегу свойство inline
 
 								coll.append(tag)
+					i += 1
 				else: 
 					coll += self.proc_tag(tag)
+					i += 1
+			else:
+				i += 1
 
 		return coll
 
@@ -512,7 +558,7 @@ if __name__ == '__main__':
 	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
 	#params.source_files = [ 'html/html.html']
-	#params.source_files = [ 'html/mail.htm']
+	#params.source_files = [ 'html/in.html']
 	params.source_files = [ 'html/test.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
