@@ -406,43 +406,31 @@ class html2fb2(object):
 		
 		coll = [] #возвращаемый массив
 		
-		if isinstance(parent_tag, list) or isinstance(parent_tag, list):
-			tags = parent_tag
-		else:
-			tags = parent_tag.contents
-		i = 0
-		while 1:
-			if i >= len(tags):
-				break
-			tag = tags[i]
+		for tag in parent_tag.contents: #бежим по дочерним тегам
 		
 			if tag.__class__ == BS.NavigableString: #если строка (не коммент, не cdata а именно строка)
 				
 				s = fix_nbsp_bug(unicode(tag))#фикс бага с &nbsp;
 				text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
 				coll.append(text)
-				i += 1
 
 			elif isinstance(tag, BS.Tag): #если тег
 			
 				if tag.name in ('script', 'form', 'style'): #теги, обработка внутри которых не производится
-					i += 1
+					pass
 				
 				elif tag.name in ('b', 'strong'): #жирный
 					rez = self.proc_tag(tag)
 					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
-					i += 1
 
 				elif tag.name == 'pre': #преформатированный текст
 					rez = self.proc_tag(tag)
 					coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
-					i += 1
 				
 				elif tag.name == 'p': #параграф
 					rez = self.proc_tag(tag)
 					#оборачиваем те теги, который можно обернуть, при этом стрипаем теги br
 					coll += self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
-					i += 1
 				
 				elif tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'): #если заголовки - оформляем их жирным выделяем в отдельный параграф
 					#ставим воспомагетальный тег - начало секции. Потом на обработке секции его надо обработать  и удалить
@@ -458,17 +446,17 @@ class html2fb2(object):
 					
 					#проверям, не была-ли title рассечена чем-нибудь (например таблица выдавилась или не inline картинка)
 					#в таком случае тоже надо добавить новую секцию
-					#и зафигачиваем все в возвращаемый массив
+					#и добавляем все в возвращаемый массив
 					if title_tags:
 						coll.append(title_tags[0])
 						for title_tag in title_tags[1:]:
+							#если еще где-то, кроме как в первом элементе встретился title, значит он был где-то рассечен
 							if isinstance(title_tag, BS.Tag) and (title_tag.name == 'title'):
-								sect = BS.Tag(soup, 'sect')
+								sect = BS.Tag(soup, 'sect') #добавдяем секцию
 								coll.append(sect)
 								coll.append(title_tag)
 							else:
 								coll.append(title_tag)
-					i += 1
 					
 				elif tag.name == 'br':
 					# если br - приходится временно ввести дополнительный тег br (потом его надо обязательно удалить)
@@ -477,20 +465,17 @@ class html2fb2(object):
 					rez = self.proc_tag(tag)
 					br = BS.Tag(soup, 'br')
 					coll.append(br)
-					i += 1
 
 				#если обрабатываем таблицы, теги ее обработки собраны в отдельной функции
 				#теги таблиц, собраны в отдельной функции
 				elif (not self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
 					coll += self.proc_tab_tags(tag)
-					i += 1
 					
 				#если таблицы не обрабатываем - на всякий случай ставим пробелы, чтоб буковки не склеивались
 				elif (self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
 					coll.append(BS.NavigableString(' '))
 					coll += self.proc_tag(tag)
 					coll.append(BS.NavigableString(' '))
-					i += 1
 					
 				elif tag.name == 'img':
 					#обрабатываем картинки
@@ -509,12 +494,8 @@ class html2fb2(object):
 								tag.inline = inline #добавляем к тегу свойство inline
 
 								coll.append(tag)
-					i += 1
 				else: 
 					coll += self.proc_tag(tag)
-					i += 1
-			else:
-				i += 1
 
 		return coll
 
