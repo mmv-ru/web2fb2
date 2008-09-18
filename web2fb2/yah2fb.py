@@ -2,6 +2,7 @@
 import time
 from xml.sax.saxutils import escape as xmlescaper #функция, экранируюущая невалидные для xml символы
 import md5
+import re
 
 
 #на текущий момент BeautifulSoup плохо обрабатывает &nbsp;
@@ -17,7 +18,6 @@ BS.BeautifulSoup.NESTABLE_TAGS['cite'] = []
 BS.BeautifulSoup.NESTABLE_TAGS['p'] = []
 BS.BeautifulSoup.NESTABLE_TAGS['pre'] = []
 
-
 import codecs
 import re
 import urllib
@@ -29,6 +29,21 @@ from PIL import Image
 import cStringIO
 
 import fb_utils
+
+#this code used for get control chars
+#import unicodedata
+#all_chars = [unichr(i) for i in xrange(0x10000)]
+#control_chars = u''.join(c for c in all_chars if (unicodedata.category(c) == 'Cc' ) and c not in (unichr(13), unichr(10), unichr(9)))
+#control_chars_int = [ord(cc) for cc in control_chars]
+
+BAD_CHARS = ''.join([unichr(c) for c in [0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159]])
+BAD_CHARS_replace = re.compile('[%s]' % re.escape(BAD_CHARS))
+
+def bad_chars_proc(s):
+	#use for all string, what adding to fb2
+	#s.replace(u' ', u' ') - for fix beatefualsoup bag: заменяет то, что получается в процессе конвертации из &nbsp; на пробел
+	return BAD_CHARS_replace.sub('', s.replace(u' ', u' '))
+
 
 class params_(object):
 	'''
@@ -94,12 +109,6 @@ def get_image( src):
 			return {'data':data, 'type':'jpg'}
 
 	return None
-
-def fix_nbsp_bug(s):
-	"""
-	заменяет то, что получается в процессе конвертации из &nbsp; на пробел
-	"""
-	return s.replace(u' ', u' ')
 	
 
 class fb2_(object):
@@ -200,13 +209,13 @@ class html2fb2(object):
 		
 		try:
 			#ищем его в <head><title>
-			title = fix_nbsp_bug( u''.join( self.soup.html.title.findAll(text = True) ) ) #try take title from <title>
+			title = bad_chars_proc( u''.join( self.soup.html.title.findAll(text = True) ) ) #try take title from <title>
 			
 		except AttributeError:
 			
 			try:
 				#пробуем взять его из первого попавшегося h1, h2, ...
-				title = fix_nbsp_bug( ''.join(self.soup.html.body.find(name = re.compile(r'h\d')).findAll(text = True)) )#try to found h tags for title
+				title = bad_chars_proc( ''.join(self.soup.html.body.find(name = re.compile(r'h\d')).findAll(text = True)) )#try to found h tags for title
 				
 			except AttributeError:
 				title = ''
@@ -222,7 +231,7 @@ class html2fb2(object):
 		
 		#пытаемся подобрать для секции загловок
 		try:
-			title_text = fix_nbsp_bug( ''.join(self.soup.html.title.findAll(text = True)) ).strip() #try take title from <title>
+			title_text = bad_chars_proc( ''.join(self.soup.html.title.findAll(text = True)) ).strip() #try take title from <title>
 		except AttributeError:
 			pass
 		else:
@@ -410,7 +419,7 @@ class html2fb2(object):
 		
 			if tag.__class__ == BS.NavigableString: #если строка (не коммент, не cdata а именно строка)
 				
-				s = fix_nbsp_bug(unicode(tag))#фикс бага с &nbsp;
+				s = bad_chars_proc(unicode(tag))#фикс бага с &nbsp;
 				text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
 				coll.append(text)
 
@@ -539,8 +548,8 @@ if __name__ == '__main__':
 	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
 	#params.source_files = [ 'html/html.html']
-	#params.source_files = [ 'html/in.html']
-	params.source_files = [ 'html/test.html']
+	params.source_files = [ 'html/nosov.html']
+	#params.source_files = [ 'html/test.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
