@@ -32,7 +32,7 @@ SCHEMA_DIR = 'schemas'
 SCHEMA_MAIN = 'FictionBook2.21.xsd'
 
 
-def do(source_files, descr, rez_file, progres, is_old_h2fb2 = False, is_img = True, is_tab = False):
+def do(source_files, descr, rez_file, progres, is_old_h2fb2 = False, is_img = True, is_tab = False, is_pre = False):
 
 	"""
 	преобразрвание html в fb2, c определением языка и поддержкой нескольких движков
@@ -90,6 +90,11 @@ def do(source_files, descr, rez_file, progres, is_old_h2fb2 = False, is_img = Tr
 			params.skip_tables = False
 		else:
 			params.skip_tables = True
+			
+		if is_pre:
+			params.skip_pre = False
+		else:
+			params.skip_pre = True
 			
 			
 		params.descr = descr

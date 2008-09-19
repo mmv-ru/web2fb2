@@ -1,4 +1,4 @@
-$def with (url, is_img, is_tab, doit)
+$def with (url, is_img, is_tab, doit, is_pre)
 
 	
 	<table id = 'urls'>
@@ -30,6 +30,18 @@ $else:
 	
 with tables
 
+        </td>
+		<td></td>
+	  </tr>
+      <tr>
+        <td></td>
+        <td>
+$if is_pre:
+    <input name="pre" id="pre" type="checkbox" value="1" checked>
+$else:
+    <input name="pre" id="pre" type="checkbox" value="1">
+	
+with &lt;code&gt; tag <small>(not сompatible with old FB2 readers)</small>
         </td>
 		<td></td>
 	  </tr>

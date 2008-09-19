@@ -33,14 +33,16 @@ import fb_utils
 #this code used for get control chars
 #import unicodedata
 #all_chars = [unichr(i) for i in xrange(0x10000)]
-#control_chars = u''.join(c for c in all_chars if (unicodedata.category(c) == 'Cc' ) and c not in (unichr(13), unichr(10), unichr(9)))
+#all_chars = [unichr(i) for i in xrange(0x110000)]
+#control_chars = u''.join(c for c in all_chars if (unicodedata.category(c) == 'Cc' ) and c not in (unichr(13), unichr(10), unichr(9))) #unichr(13), unichr(10), unichr(9) is \n, \r, \t
 #control_chars_int = [ord(cc) for cc in control_chars]
-
 BAD_CHARS = ''.join([unichr(c) for c in [0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159]])
 BAD_CHARS_replace = re.compile('[%s]' % re.escape(BAD_CHARS))
 
+
 def bad_chars_proc(s):
 	#use for all string, what adding to fb2
+	
 	#s.replace(u' ', u' ') - for fix beatefualsoup bag: заменяет то, что получается в процессе конвертации из &nbsp; на пробел
 	return BAD_CHARS_replace.sub('', s.replace(u' ', u' '))
 
@@ -54,7 +56,8 @@ class params_(object):
 		self.source_files = [] #имена выходных файлов (можно с путями)
 		self.descr = None #объкт дескрипшена (см. fb_utils) для формирования заголовка fb2
 		self.skip_images = None #не обрабатывать картинки
-		self.skip_tables = None #не обрабатывать картинки
+		self.skip_tables = None #не обрабатывать таблицы
+		self.skip_pre = None #не обрабатывать таблицы
 
 class binary(object):
 	'''
@@ -188,10 +191,11 @@ class html2fb2(object):
 	'''
 	парсер html
 	'''
-	def __init__(self, fb2, in_file, skip_images = False, skip_tables = False):
+	def __init__(self, fb2, in_file, skip_images = False, skip_tables = False, skip_pre = True):
 		self.in_file = in_file 
 		self.skip_images = skip_images
 		self.skip_tables = skip_tables
+		self.skip_pre = skip_pre
 		self.fb2 = fb2
 		self.fb2s = fb2.soup # soup структура fb2
 		
@@ -200,6 +204,9 @@ class html2fb2(object):
 		data = codecs.open(self.in_file, 'r', 'utf-8').read()
 
 		self.soup = BS.BeautifulSoup(data, selfClosingTags=[], convertEntities="html") #парсим html в soup структуру
+		
+		#регулярка для разделение строки на переносы
+		self.split_lines = re.compile(r"\r\n|\r|\n", re.MULTILINE)
 		
 
 	def detect_descr(self):
@@ -265,7 +272,7 @@ class html2fb2(object):
 		#присоединяем секцию к fb2
 		self.fb2s.body.append(big_section)
 	
-	def break_tags(self, this_tag, rez, good_tags, image_outline = False, image_inline = True, string = True, bad_tags = ['br']):
+	def break_tags(self, this_tag, rez, good_tags, image_outline = False, image_inline = True, string = True, bad_tags = []):
 		'''
 		оборачивает массив rez тегом this_tag
 		возвращает массив.
@@ -316,7 +323,7 @@ class html2fb2(object):
 		return True
 
 	
-	def proc_tab_tags(self, tag):
+	def proc_tab_tags(self, tag, in_pre = False):
 		'''
 		обработка тегов таблиц
 		'''
@@ -324,7 +331,7 @@ class html2fb2(object):
 		coll = [] #возвращаемый массив
 		
 		if tag.name == 'table':
-			rez = self.proc_tag(tag)
+			rez = self.proc_tag(tag, in_pre)
 			#если внутри содержится что-то кроме tr, th, td - вынимаем контент из th, td и добавляем к результату
 			#из tr - вынимать ничего не надо - он не ничего не содержит (см. код обработки tr)
 			#вместо самих же тегов: на всякий случай ставим пробелы (чтоб не скливались буковки
@@ -362,7 +369,7 @@ class html2fb2(object):
 					coll.append(table)
 				
 		elif tag.name == 'tr':
-			rez = self.proc_tag(tag)
+			rez = self.proc_tag(tag, in_pre)
 			#если внутри встретилось что-то кроме тегов td, th -  добавляем это что-то к результату 
 			if rez:
 				if not self.check_tags(rez, ('td', 'th'), string = False):
@@ -377,7 +384,7 @@ class html2fb2(object):
 				
 		elif (not self.skip_tables) and (tag.name in ('td','th')):
 			#обрабатываем внутренности таблицы
-			rez = self.proc_tag(tag)
+			rez = self.proc_tag(tag, in_pre)
 			#проверям, что внутренние теги - те которые допустимы.
 			if not self.check_tags(rez, ('strong', 'emphasis', 'code', 'image'), string = True):
 				coll += rez #если внутри все слишком сложно - нафиг такую внутри.
@@ -405,10 +412,11 @@ class html2fb2(object):
 		return coll
 		
 	
-	def proc_tag(self, parent_tag):
+	def proc_tag(self, parent_tag, in_pre = False):
 		'''
 		рекурсивная обработка тегов
 		возвращает массив тегов
+		in_pre - если нужна специальная обработка строк, в pre
 		
 		'''
 		soup = self.fb2s
@@ -419,9 +427,20 @@ class html2fb2(object):
 		
 			if tag.__class__ == BS.NavigableString: #если строка (не коммент, не cdata а именно строка)
 				
-				s = bad_chars_proc(unicode(tag))#фикс бага с &nbsp;
-				text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
-				coll.append(text)
+				s = bad_chars_proc(unicode(tag))#обработка левых символов
+				if in_pre: #если включена обработка переносов, ставим всесто каждого переноса br
+					s_l = self.split_lines.split(s)
+					for c in s_l[:-1]:
+						text = BS.NavigableString(xmlescaper(c)) #создаем строку и эскейпим ее
+						coll.append(text)
+						br = BS.Tag(soup, 'br')
+						coll.append(br)
+					c = s_l[-1]
+					text = BS.NavigableString(xmlescaper(c))
+					coll.append(text)
+				else:	
+					text = BS.NavigableString(xmlescaper(s)) #создаем строку и эскейпим ее
+					coll.append(text)
 
 			elif isinstance(tag, BS.Tag): #если тег
 			
@@ -429,15 +448,23 @@ class html2fb2(object):
 					pass
 				
 				elif tag.name in ('b', 'strong'): #жирный
-					rez = self.proc_tag(tag)
+					rez = self.proc_tag(tag, in_pre)
 					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+				
+				elif tag.name in ('i', 'cite', 'em', 'var'): #жирный
+					rez = self.proc_tag(tag, in_pre)
+					coll += self.break_tags('emphasis', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
 
 				elif tag.name == 'pre': #преформатированный текст
-					rez = self.proc_tag(tag)
-					coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					if self.skip_pre: #если не обрабатываем pre, включаем спец-обработчик переносов строки для всех дочерних тегов
+						rez = self.proc_tag(tag, in_pre = True)
+						coll += rez
+					else:
+						rez = self.proc_tag(tag, in_pre)
+						coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
 				
 				elif tag.name == 'p': #параграф
-					rez = self.proc_tag(tag)
+					rez = self.proc_tag(tag, in_pre)
 					#оборачиваем те теги, который можно обернуть, при этом стрипаем теги br
 					coll += self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
 				
@@ -447,7 +474,7 @@ class html2fb2(object):
 					coll.append(sect)
 					
 					#обрабатываем то, что внутри title
-					rez_title = self.proc_tag(tag)
+					rez_title = self.proc_tag(tag, in_pre)
 					#добавляем p
 					p_title = self.break_tags('p', rez_title, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
 					#добавляем title
@@ -471,19 +498,19 @@ class html2fb2(object):
 					# если br - приходится временно ввести дополнительный тег br (потом его надо обязательно удалить)
 					# он не входит не в список разрешенных тегов и поэтому будет выталкиваться, пока его не удалят
 					# удаление происходит на уровне тега p
-					rez = self.proc_tag(tag)
+					rez = self.proc_tag(tag, in_pre)
 					br = BS.Tag(soup, 'br')
 					coll.append(br)
 
 				#если обрабатываем таблицы, теги ее обработки собраны в отдельной функции
 				#теги таблиц, собраны в отдельной функции
 				elif (not self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
-					coll += self.proc_tab_tags(tag)
+					coll += self.proc_tab_tags(tag, in_pre)
 					
 				#если таблицы не обрабатываем - на всякий случай ставим пробелы, чтоб буковки не склеивались
 				elif (self.skip_tables) and (tag.name in ('table', 'tr', 'td', 'th')):
 					coll.append(BS.NavigableString(' '))
-					coll += self.proc_tag(tag)
+					coll += self.proc_tag(tag, in_pre)
 					coll.append(BS.NavigableString(' '))
 					
 				elif tag.name == 'img':
@@ -504,7 +531,7 @@ class html2fb2(object):
 
 								coll.append(tag)
 				else: 
-					coll += self.proc_tag(tag)
+					coll += self.proc_tag(tag, in_pre)
 
 		return coll
 
@@ -523,7 +550,7 @@ def htmls2fb2(params):
 	
 	for in_file in params.source_files:
 		#обрабатываем отдельно каждый html файл
-		h2f = html2fb2(fb2, in_file, params.skip_images, params.skip_tables)
+		h2f = html2fb2(fb2, in_file, params.skip_images, params.skip_tables, params.skip_pre)
 		h2f.process()
 			
 		if descr.selfdetect: #если нужно самим определить дискрипшн - пытаемся определить title
@@ -541,8 +568,6 @@ def htmls2fb2(params):
 	return descr
 
 if __name__ == '__main__':
-	
-
 	params = params_()
 	params.skip_images = False
 	params.skip_tables = False
@@ -555,5 +580,4 @@ if __name__ == '__main__':
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
 	#params.descr.selfdetect = False
 
-	
 	htmls2fb2(params)

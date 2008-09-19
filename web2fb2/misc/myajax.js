@@ -67,9 +67,16 @@ $(document).ready(function(){
 			{
 				$("#tab").attr({disabled: true})
 				$("#tab").attr({checked: false})
+				
+				$("#pre").attr({disabled: true})
+				$("#pre").attr({checked: false})
 			}
 			else
+			{
 				$("#tab").attr({disabled: false})
+				
+				$("#pre").attr({disabled: false})
+			}
 		}
 	);
 	

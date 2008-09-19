@@ -37,7 +37,7 @@ def base():
 
 	webutils.print_page(
 		render.widget_base(
-			render.widget_form('http://', True, False, False),
+			render.widget_form('http://', True, False, False, False),
 			render.widget_descr(
 				'',
 				'',
@@ -85,6 +85,9 @@ def ajax():
 		
 		if form.getvalue('tab') == 'true':
 			params.is_tab = True
+			
+		if form.getvalue('pre') == 'true':
+			params.is_pre = True
 		
 			
 		if form.getvalue('old_h2fb2') == 'true':

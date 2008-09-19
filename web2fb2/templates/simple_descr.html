@@ -1,4 +1,4 @@
-$def with (title, authors, len_authors, genres, cur_genre, lang, is_images, urls, len_urls, is_tables, old_h2fb2)
+$def with (title, authors, len_authors, genres, cur_genre, lang, is_images, urls, len_urls, is_tables, old_h2fb2, is_pre)
 
 <br />
 <table>
@@ -84,6 +84,9 @@ $if is_images:
 		  
 $if is_tables:
           <input name="tab" type="hidden" value="True">
+
+$if is_pre:
+		  <input name="pre" type="hidden" value="True">
 
 $if old_h2fb2:
           <input name="old_h2fb2" type="hidden" value="True">

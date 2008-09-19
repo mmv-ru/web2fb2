@@ -62,6 +62,12 @@ def main():
 		if form.getvalue('tab', False):
 			params.is_tab = True
 		
+		if form.getvalue('pre', False):
+			log.debug('preprepre')
+			params.is_pre = True
+		else:
+			log.debug('not preprepre')
+		
 		if form.getvalue('old_h2fb2', False):
 			params.old_h2fb2 = True
 		
@@ -171,7 +177,8 @@ def main():
 					stat.urls,
 					[i for i in xrange(len(stat.urls))],
 					stat.tab,
-					stat.old_h2fb2
+					stat.old_h2fb2,
+					stat.pre,
 				)
 				webutils.print_page( render.simple_base(result_html + descr_html) )
 			

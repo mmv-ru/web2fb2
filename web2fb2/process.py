@@ -42,6 +42,7 @@ class web_params(object):
 		self.is_img = ''
 		self.is_zip = True
 		self.is_tab = False
+		self.is_pre = False
 		self.descr = None
 		self.old_h2fb2 = False
 		
@@ -57,6 +58,7 @@ class ebook_stat_(object):
 		self.file_name = '' 
 		self.img = False
 		self.tab = False
+		self.pre = False
 		self.old_h2fb2 = False
 		self.descr = None
 		self.valid = None
@@ -111,6 +113,7 @@ def do(params, sess, ajax = False):
 
 	log.debug('start process')
 	#создаем хешь из всего - для однозначной идентификации файла. имя папки однозначно отображает параметры создания книги
+	log.debug('pre %s' % params.is_pre)
 	folder_name = md5.new(str(pickle.dumps(params))).hexdigest()
 	
 	log.debug('Generate name: %s'% folder_name)
@@ -236,7 +239,7 @@ def do(params, sess, ajax = False):
 			progres.level = 3
 			progres.save()
 			log.debug('start html process')
-			descr, valid = htmlprocess.do(raw_paths, params.descr, ebook_tmp_path, progres, params.old_h2fb2, params.is_img, params.is_tab) #процесс перевода html в книгу
+			descr, valid = htmlprocess.do(raw_paths, params.descr, ebook_tmp_path, progres, params.old_h2fb2, params.is_img, params.is_tab, params.is_pre) #процесс перевода html в книгу
 			log.debug('End of html process')
 			
 			#создаем имя
@@ -273,6 +276,7 @@ def do(params, sess, ajax = False):
 			ebook_stat.file_size = os.path.getsize(ebook_path) 
 			ebook_stat.img =  params.is_img
 			ebook_stat.tab =  params.is_tab
+			ebook_stat.pre =  params.is_pre
 			ebook_stat.old_h2fb2 = params.old_h2fb2
 			ebook_stat.valid = valid
 			ebook_stat.preview_file = preview_path

@@ -39,7 +39,7 @@ def base():
 	
 	webutils.print_page(
 		render.ajax_base(
-			render.ajax_form('http://', True, False, False),
+			render.ajax_form('http://', True, False, False, False),
 			render.ajax_descr(
 				'',
 				'',
@@ -88,8 +88,12 @@ def ajax():
 		if form.getvalue('tab', ''):
 			params.is_tab = True
 			
+		if form.getvalue('pre', ''):
+			params.is_pre = True
+			
 		if form.getvalue('old_h2fb2', ''):
 			params.old_h2fb2 = True
+			
 		
 		descr = fb_utils.description()
 		descr.urls = params.urls

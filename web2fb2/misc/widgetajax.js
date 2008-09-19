@@ -20,6 +20,26 @@ $(document).ready(function(){
 		$("#descr_div").slideToggle("fast")
 	});
 	
+	
+	$("#old_h2fb2").change(
+		function(){
+			if( $("#old_h2fb2").attr('checked') )
+			{
+				$("#tab").attr({disabled: true})
+				$("#tab").attr({checked: false})
+				
+				$("#pre").attr({disabled: true})
+				$("#pre").attr({checked: false})
+			}
+			else
+			{
+				$("#tab").attr({disabled: false})
+				
+				$("#pre").attr({disabled: false})
+			}
+		}
+	);
+	
 	$("#descr_div #autodetect").change(
 		function(){
 			autodetect_change()
@@ -97,6 +117,7 @@ $(document).ready(function(){
 					'url': $('#weburl').val(),
 					'img': $('#img').attr('checked'),
 					'tab': $('#tab').attr('checked'),
+					'pre': $('#pre').attr('checked'),
 					'old_h2fb2': $('#old_h2fb2').attr('checked'),
 					
 					'autodetect': $('#autodetect').attr('checked'),
