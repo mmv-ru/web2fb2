@@ -181,7 +181,7 @@ class fb2_(object):
 		self.description += '<date value="%s">%s</date>\n' % (time.strftime('%Y-%m-%d'), time.strftime('%Y-%m-%d'))
 		
 		if descr.urls:
-			self.description += '<src-url>%s</src-url>\n' % ' '.join(descr.urls)
+			self.description += '<src-url>%s</src-url>\n' % ' '.join([ xmlescaper(bad_chars_proc(unicode(x))) for x in descr.urls ])
 		self.description += '<id>%s</id>\n' % descr.id
 		self.description += '<version>%s</version>\n' % descr.version
 		self.description += '</document-info>\n'
