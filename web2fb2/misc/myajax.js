@@ -1,34 +1,161 @@
+//добавить автора
 function addaut(obj)
-	{
-		if (! $("input", $(obj).parent()).attr('disabled'))
-			add_author($('input:eq(0)', $(obj).parent()).val(), $('input:eq(1)', $(obj).parent()).val(), $('input:eq(2)', $(obj).parent()).val())
-	}
+{
+	if (! $("input", $(obj).parent()).attr('disabled'))
+		add_author($('input:eq(0)', $(obj).parent()).val(), $('input:eq(1)', $(obj).parent()).val(), $('input:eq(2)', $(obj).parent()).val())
+}
 	
+//удалить автора
 function remaut(obj)
-	{
-		if (! $("input", $(obj).parent()).attr('disabled'))
-			if( $("#authors tr").length > 1)
-				$(obj).parent().remove();
-	}
+{
+	if (! $("input", $(obj).parent()).attr('disabled'))
+		if( $("#authors tr").length > 1)
+			$(obj).parent().remove();
+}
 	
-	function add_author(first, middle, last)
-	{
-		id = 0
-		if ($("#authors tr:last input").attr('name'))
-			id = 1 + parseInt($("#authors tr:last input").attr('name').split('|')[1]);
+//добавление самой первой строки автора
+function add_author(first, middle, last)
+{
+	id = 0
+	if ($("#authors tr:last input").attr('name'))
+		id = 1 + parseInt($("#authors tr:last input").attr('name').split('|')[1]);
 		
-		$("#authors").append("<tr><td>Author:</td><td><input class='descr' type='text' name='author_first|" + id +"'  size='20' maxlength='256' value = '" + first + "'/><br /><label style='font-size:x-small'>first name</label></td><td><input class='descr' type='text' name='author_middle|" + id +"' size='20' maxlength='256' value = '" + middle + "' /><br /><label style='font-size:x-small'>middle name</label></td><td><input class='descr' type='text' name='author_last|" + id +"' size='20' maxlength='256' value = '" + last + "' /><br /><label style='font-size:x-small'>last name</label></td><td id ='addaut' onClick = 'addaut(this)'>[+]<br />&nbsp;</td><td id ='remaut' onClick = 'remaut(this)'>[-]<br />&nbsp;</td></tr>")
+	$("#authors").append("<tr><td>Author:</td><td><input class='descr' type='text' name='author_first|" + id +"'  size='20' maxlength='256' value = '" + first + "'/><br /><label style='font-size:x-small'>first name</label></td><td><input class='descr' type='text' name='author_middle|" + id +"' size='20' maxlength='256' value = '" + middle + "' /><br /><label style='font-size:x-small'>middle name</label></td><td><input class='descr' type='text' name='author_last|" + id +"' size='20' maxlength='256' value = '" + last + "' /><br /><label style='font-size:x-small'>last name</label></td><td id ='addaut' onClick = 'addaut(this)'>[+]<br />&nbsp;</td><td id ='remaut' onClick = 'remaut(this)'>[-]<br />&nbsp;</td></tr>")
 		
+}
+
+//сделать поля ввода неаквтивными
+function work_disable()
+{
+	$(".descr").attr({disabled: true});
+	$("form input").attr({disabled: true});
+}
+	
+//сделать поля ввода автивными
+function work_enable()
+{
+	$(".descr").attr({disabled: false});
+	$("form input").attr({disabled: false});
+	autodetect_change();
+	change_ext_features_state();
+}
+
+//енаблит, дасаблит поля в дескрипшене
+function autodetect_change()
+{
+	if( $("#descr_div #autodetect").attr('checked') )
+		$(".descr").attr({disabled: true})
+	else
+		$(".descr").attr({disabled: false})
+}
+
+
+//скрыть дескрипшн
+function description_hide()
+{
+	$("#descr_div").hide("fast", function(){
+		$('#descr_off').hide();
+		$('#descr_on').show();
+	});
+}
+
+//показать дескрипшн
+function description_show()
+{
+	$("#descr_div").show("fast", function(){
+		$('#descr_on').hide();
+		$('#descr_off').show();
+	});
+}
+
+//показать расширенные параметры
+function adv_params_show()
+{
+	$("#adv_params").show("fast", function(){
+		$("#adv_params_on").hide();
+		$("#adv_params_off").show();
+	});
+}
+
+//скрыть расширенные параметры
+function adv_params_hide()
+{
+	$("#adv_params").hide("fast", function(){
+		$("#adv_params_off").hide();
+		$("#adv_params_on").show();
+	});
+}
+
+function extend_urls()
+{
+	var urls = $("#urls > #url_row > #url")
+	for(i=0; i < urls.length; i++)
+	{	
+		old_url = urls[i].value;
+		if (old_url != '')
+			if(old_url.indexOf("://") == -1)
+			{
+				new_url = "http://" + old_url;
+				urls[i].value = new_url;
+			}
 	}
+}
+
+//добавить урл
+function add_url(source)
+{
+	if (! $("input", $(source).parent()).attr('disabled'))
+	{
+		if( $("#urls > #url_row").length < 10)
+		{
+			
+			$(source).parent().clone(true).insertAfter($(source).parent())
+		}
+	}
+}
+
+//удалить урл
+function rem_url(target)
+{
+	if (! $("input", $(target).parent()).attr('disabled'))
+		if( $("#urls > #url_row").length > 1)
+			$(target).parent().remove();
+}
+
+//подстановка примера
+function do_example()
+{
+	$("#urls > #url_row > #url")[0].value = $("#example_url").text();
+	
+}
+
+//функция, которая дисаблит, энаблит контролы, отвечающие за включение-выключение дополнительных фич нового движка
+function change_ext_features_state(){
+	if( $("#old_h2fb2").attr('checked') )
+	{
+		$("#tab").attr({disabled: true})
+		$("#tab").attr({checked: false})
+				
+		$("#pre").attr({disabled: true})
+		$("#pre").attr({checked: false})
+	}
+	else
+	{
+		$("#tab").attr({disabled: false})
+				
+		$("#pre").attr({disabled: false})
+	}
+}
+
+var a1 = $('<img>').attr('src','/misc/done.gif');
+var a2 = $('<img>').attr('src','/misc/blank.gif');
+var a3 = $('<img>').attr('src','/misc/progress.gif');
+var a4 = $('<img>').attr('src','/misc/progress_big.gif');
 
 
+//когда DOM загрузился, можно продолжить
 $(document).ready(function(){
 	
-	
-	a1 = $('<img>').attr('src','/misc/done.gif');
-	a2 = $('<img>').attr('src','/misc/blank.gif');
-	a3 = $('<img>').attr('src','/misc/progress.gif');
-	a4 = $('<img>').attr('src','/misc/progress_big.gif');
 	
 	$("#descr_div").hide();
 	$(".error").hide()
@@ -40,51 +167,48 @@ $(document).ready(function(){
 	add_author('', '', '')
 	
 	autodetect_change()
-	
-	
 
-	$("#descr_tab").click(function(){
-		$("#descr_div").slideToggle("fast")
+	//открыть, закрыть форму с дескрипшеном
+	$("#descr_off").click(function(){
+		description_hide()
+	});
+	$("#descr_on").click(function(){
+		description_show()
 	});
 	
+	//показать/скрыть расширенные параметры
+	$("#adv_params_on").click(function(){
+		adv_params_show();
+	});
+	$("#adv_params_off").click(function(){
+		adv_params_hide();
+	});
+	
+	//добавить урл
 	$("#addurl").click(function(){
-		
-		if (! $("input", $(this).parent()).attr('disabled'))
-			if( $("#urls tr").length < 10)
-				$(this).parent().clone(true).appendTo($("#urls"));
+		add_url(this);
 	});
 	
+	//убрать урл
 	$("#remurl").click(function(){
-		
-		if (! $("input", $(this).parent()).attr('disabled'))
-			if( $("#urls tr").length > 1)
-				$(this).parent().remove();
+		rem_url(this);
 	});
 	
-	$("#old_h2fb2").change(
-		function(){
-			if( $("#old_h2fb2").attr('checked') )
-			{
-				$("#tab").attr({disabled: true})
-				$("#tab").attr({checked: false})
-				
-				$("#pre").attr({disabled: true})
-				$("#pre").attr({checked: false})
-			}
-			else
-			{
-				$("#tab").attr({disabled: false})
-				
-				$("#pre").attr({disabled: false})
-			}
-		}
-	);
+	//чек-анчек контрола старого движка
+	$("#old_h2fb2").change(function(){
+		change_ext_features_state()
+	});
 	
-	$("#descr_div #autodetect").change(
-		function(){
-			autodetect_change()
-		}
-	);
+	//изменение контрола автодетекта дескрипшена
+	$("#autodetect").change(function(){
+		autodetect_change()
+	});
+	
+	//действие при клике на пример
+	$("#example_url").click(function(){
+		do_example();
+	});
+	
 	
 	$("#cancel").click(
 		function(){
@@ -93,18 +217,17 @@ $(document).ready(function(){
 		}
 	);
 	
-	
-	$("form").submit(
-		function(){
-			$(".error").html('')
-			$(".error").hide()
-			$(".try").html('')
-			$(".try").hide()
-			$(".result").html('')
-			$(".result").hide('')
-			$(".cancel").show('')
-			$(".progres").show('')
-			$(".progres").html('<center><img src = "/misc/progress_big.gif" /></center>')
+	$("form").submit(function(){
+			extend_urls();
+			$(".error").html('');
+			$(".error").hide();
+			$(".try").html('');
+			$(".try").hide();
+			$(".result").html('');
+			$(".result").hide('');
+			$(".cancel").show('');
+			$(".progres").show('');
+			$(".progres").html('<center><img src = "/misc/progress_big.gif" /></center>');
 			
 			CANCEL = false;
 			
@@ -113,37 +236,12 @@ $(document).ready(function(){
 				$(".progres").hide('');
 				$(".error").show();
 			});
-			get_ans()
-			
+			get_ans();
 			return false
 		}
 	)
-	
-	
-	
-	function autodetect_change()
-	{
-		if( $("#descr_div #autodetect").attr('checked') )
-			$(".descr").attr({disabled: true})
-		else
-			$(".descr").attr({disabled: false})
-	}
-	
-	function work_disable()
-	{
-		$(".descr").attr({disabled: true});
-		$("form input").attr({disabled: true});
-	}
-	
-	function work_enable()
-	{
-		$(".descr").attr({disabled: false});
-		$("form input").attr({disabled: false});
-		autodetect_change()
-	}
-	
-	
-	
+
+
 	function get_ans()
 	{
 
@@ -157,30 +255,6 @@ $(document).ready(function(){
 			var str = $("#f").serialize()
 			work_disable();
 			$.getJSON("?ajax=1&" +str, onAjaxSuccess)
-			
-			/*
-			$.getJSON(
-				"",
-				{
-					'ajax':1,
-					
-					'url': $('#weburl').val(),
-					'img': $('#img').attr('checked'),
-					'old_h2fb2': $('#old_h2fb2').attr('checked'),
-					'json': $("#f").serializeArray(),
-					
-					'autodetect': $('#autodetect').attr('checked'),
-					'title': $('#title').val(),
-					'author_first':$('#author_first').val(),
-					'author_middle':$('#author_middle').val(),
-					'author_last':$('#author_last').val(),
-					'genre': $('#genre').val(),
-					'lang':$('#lang').val()
-				},
-				onAjaxSuccess
-			)
-			*/
-			
 		}
 	}
 	
@@ -223,7 +297,7 @@ $(document).ready(function(){
 			$('#genre').val(obj.descr['genre']);
 			$('#lang').val(obj.descr['lang'])
 			
-			authors = obj.descr['authors']
+			var authors = obj.descr['authors'];
 			$("#authors").empty()
 			
 			for(i=0; i< authors.length; i++)

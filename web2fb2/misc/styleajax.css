@@ -6,8 +6,30 @@ body {
 	border: solid 1px #c4c4c4;
 	background-color: #f7f7f7;
 	overflow:visible;
-	width:37em;
+	width: 41em;
 	margin: 0 auto 0 auto;
+}
+
+.example {
+	font-size: x-small;
+	margin-left: 3em;
+}
+
+.example_url {
+	border-bottom: 1px dashed #000000;
+	cursor: pointer;
+}
+
+.img_param{
+	float: left;
+}
+
+.adv_params_toggle{
+	
+	font-size: small;
+	text-decoration: underline;
+	cursor: pointer;
+	margin-left: 17em;
 }
 .tab
 {
@@ -18,7 +40,6 @@ body {
 
 }
 #descr_tab {
-	cursor: pointer;
 	border-top: solid 1px #c4c4c4;
 }
 
@@ -26,11 +47,15 @@ body {
 	padding: 5px 5px 5px 5px;
 }
 
-#params {
-	width:100%;
-}
+
 
 #addurl, #remurl, #addaut, #remaut{
+	cursor: pointer;
+}
+
+
+
+.descr_toggle{
 	cursor: pointer;
 }
 
@@ -153,28 +178,20 @@ html, body {
   border: 2px solid #FF3333;
 }
 
-.preview_bar {
-	position: absolute;
-	overflow: auto;  
-	
-	top: 5em;
-	width: 50em;  
-	height: 30em; 
-	left: 50%;
-	margin-left: -25em;  
-	
-	border: 1px solid;
-	visibility: hidden;
-	background-color: #F0F0F0;
-	z-index: 2;
+.preview_on {
+	cursor: pointer;
+	display: none;
 }
 
-.preview_close {
-	cursor: pointer;
+.preview_proxy {
+	border: 1px solid;
+	padding: 10px;
 }
+
 .preview_ifame {
-	margin: 0.3em;
-	width: 49em;
-	height: 27.5em;
 	background-color: #FFFFFF;
+	height: 0;
+	width: 0;
 }
+
+

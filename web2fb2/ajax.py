@@ -39,7 +39,7 @@ def base():
 	
 	webutils.print_page(
 		render.ajax_base(
-			render.ajax_form('http://', True, False, False, False),
+			render.ajax_form('', True, False, False, False),
 			render.ajax_descr(
 				'',
 				'',

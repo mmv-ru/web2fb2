@@ -8,8 +8,12 @@ $def with (form, descr)
 <style type="text/css" media="all">
 @import "misc/styleajax.css";
 </style>
-<script type="text/javascript" src="misc/jquery.js"></script>
-<script type="text/javascript" src="misc/myajax.js"></script>
+<script src="misc/jquery-1.2.6.js"></script>
+<script src="misc/jquery-ui-personalized.js"></script>
+<script src="misc/myajax.js"></script>
+
+
+
 </script>
 </head>
 <body>
@@ -69,8 +73,8 @@ pageTracker._trackPageview();
   <div id = 'divurl'>
 $:form    
   </div>
-  <h5 class = 'tab' id = 'descr_tab'>► FB2 description</h5>
-  <div id = 'descr_div'>
+  <h5 class = 'tab'><span class = 'descr_toggle' id = 'descr_on'>► FB2 description</span><span class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</span></h5>
+  <div id = 'descr_div' style="display: none;">
 $:descr
   </div>
 </div>

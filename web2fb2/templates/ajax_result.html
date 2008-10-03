@@ -6,33 +6,9 @@ $else:
 	<span id='invalid_fb2' title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
 <br />
 
-<script language=JavaScript>
-function preview_show() {
+<span id = 'preview_on' class = 'preview_on'><u>preview</u></span>
+
+<script src="misc/myajax_preveiw.js"></script>
+<iframe id ='preview_ifame' class ='preview_ifame' src='$preview_link'></iframe>
 
 
-obj = document.getElementById("preview_win").style.visibility = "visible";
-//obj = document.getElementById("preview_fade").style.visibility = "visible";
-
-}
-
-function preview_close() {
-
-document.getElementById("preview_win").style.visibility="hidden"
-//document.getElementById("preview_fade").style.visibility="hidden"
-
-}
-</script>
-
-<span style='cursor: pointer;' onclick='preview_show()'><u>preview</u></span>
-
-<div id='preview_win' class='preview_bar'> 
-<table width = '100%'>
-<tr>
-<td align="left"><b>preview</b></td>
-<td align="right"><span class='preview_close' style = 'text-align:right' title='Close' onclick='preview_close()'><b>[X]</b></span></td>
-</tr>
-</table>
-
-<iframe class ='preview_ifame' src='$preview_link'></iframe>
-
-</div>

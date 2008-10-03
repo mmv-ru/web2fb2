@@ -1,57 +1,49 @@
 $def with (url, is_img, is_tab, doit, is_pre)
+	
+<table>
+<tr><td>
+<div id = 'urls'>
+  <div id = 'url_row'>
+	<strong>Url:</strong>
+	<input name="url" id="url" type="text" size="78" maxlength="256" value="$url" />
+	<span id = 'addurl'>[+]</span>
+	<span id = 'remurl'>[-]</span>
+  </div>
+  <span id = 'example' class = 'example'>example: <span class = 'example_url' id = 'example_url'>http://lib.ru/INOFANT/BRADBURY/gorod.txt</span></span>
+</div>
 
+$if doit:
+    <input type="hidden" id="doit" value = "true"/>
 	
-	<table id = 'urls'>
-      <tr>
-        <td><strong>Url:</strong> </td>
-        <td><input name="url" id="url" type="text" size="78" maxlength="256" value="$url" />
-        </td>
-		<td id = 'addurl'>[+]</td>
-        <td id = 'remurl'>[-]</td>
-      </tr>
-	<table>
-	
-	<table id = 'params'>
-      <tr>
-        <td></td>
-        <td>
+</br>
+<div id = 'params' class = 'params'>
 $if is_img:
     <input name="img" id="img" type="checkbox" value="1" checked>
 $else:
     <input name="img" id="img" type="checkbox" value="1">
 	
-with images
-&nbsp;
+with images 
+	<span class = 'adv_params_toggle' id = 'adv_params_on' >show advanced options</span><span class = 'adv_params_toggle'id = 'adv_params_off' style="display: none;">hide advanced options</span>
+</div>
+	
+<span  id = 'adv_params' style="display: none;">
 
 $if is_tab:
     <input name="tab" id="tab" type="checkbox" value="1" checked>
 $else:
     <input name="tab" id="tab" type="checkbox" value="1">
 	
-with tables
+with tables<br/>
 
-        </td>
-		<td></td>
-	  </tr>
-      <tr>
-        <td></td>
-        <td>
 $if is_pre:
     <input name="pre" id="pre" type="checkbox" value="1" checked>
 $else:
     <input name="pre" id="pre" type="checkbox" value="1">
 	
-with &lt;code&gt; tag <small>(not сompatible with old FB2 readers)</small>
-        </td>
-		<td></td>
-	  </tr>
-	  <tr>
-	    <td></td>
-		<td><input name="old_h2fb2" id='old_h2fb2' type="checkbox" value="1"> use old h2fb2 engine</td>
+with &lt;code&gt; tag <small>(not сompatible with old FB2 readers)</small><br/>
+        
+	<input name="old_h2fb2" id='old_h2fb2' type="checkbox" value="1"> use old h2fb2 engine
 
-$if doit:
-    <input type="hidden" id="doit" value = "true"/>
-
-		<td><input name="" type="submit" value=" Do "/></td>
-      </tr>
-    </table>
+</span>
+</td>
+<td><input name="" type="submit" value=" Do "/></td></tr></table>
