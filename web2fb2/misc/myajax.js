@@ -1,3 +1,6 @@
+//глобалная переменная - останавливать выполнение циклических запросов или нет
+CANCEL_WORK = false;
+
 //добавить автора
 function addaut(obj)
 {
@@ -21,7 +24,6 @@ function add_author(first, middle, last)
 		id = 1 + parseInt($("#authors tr:last input").attr('name').split('|')[1]);
 		
 	$("#authors").append("<tr><td>Author:</td><td><input class='descr' type='text' name='author_first|" + id +"'  size='20' maxlength='256' value = '" + first + "'/><br /><label style='font-size:x-small'>first name</label></td><td><input class='descr' type='text' name='author_middle|" + id +"' size='20' maxlength='256' value = '" + middle + "' /><br /><label style='font-size:x-small'>middle name</label></td><td><input class='descr' type='text' name='author_last|" + id +"' size='20' maxlength='256' value = '" + last + "' /><br /><label style='font-size:x-small'>last name</label></td><td id ='addaut' onClick = 'addaut(this)'>[+]<br />&nbsp;</td><td id ='remaut' onClick = 'remaut(this)'>[-]<br />&nbsp;</td></tr>")
-		
 }
 
 //сделать поля ввода неаквтивными
@@ -86,6 +88,7 @@ function adv_params_hide()
 	});
 }
 
+//для всех URL добавить http://, если надо
 function extend_urls()
 {
 	var urls = $("#urls > #url_row > #url")
@@ -147,26 +150,171 @@ function change_ext_features_state(){
 	}
 }
 
-var a1 = $('<img>').attr('src','/misc/done.gif');
-var a2 = $('<img>').attr('src','/misc/blank.gif');
-var a3 = $('<img>').attr('src','/misc/progress.gif');
-var a4 = $('<img>').attr('src','/misc/progress_big.gif');
+//предварительная загрузка картинок
+function preload_images()
+{
+	$('<img>').attr('src','/misc/done.gif');
+	$('<img>').attr('src','/misc/blank.gif');
+	$('<img>').attr('src','/misc/progress.gif');
+	$('<img>').attr('src','/misc/progress_mid.gif');
+	$('<img>').attr('src','/misc/progress_big.gif');
+
+}
 
 
-//когда DOM загрузился, можно продолжить
-$(document).ready(function(){
+//показываем ощибку, разрешаем управлять настройками
+function viz_error(msg)
+{
+	$(".progres").hide();
+	$(".error").show();
+	$(".error").html(msg);
+	$(".cancel").hide()
+	$(".try").hide()
 	
+	work_enable();
+}
+
+
+//показывает рабочий процесс
+function viz_work(data)
+{
 	
-	$("#descr_div").hide();
+	$(".error").hide();
+	$(".try").hide();
+	$(".result").hide();
+	
+	$(".cancel").show('');
+	$(".progres").show();
+	$(".progres").html(data);
+	work_disable()
+}
+
+
+//показывает результат
+function viz_result(data)
+{
+	$(".progres").hide()
+	$(".cancel").hide()
+	$(".try").hide()
+	$(".result").show()
+	$(".result").html(data)
+	work_enable();
+}
+
+//возвращает все на начало
+function viz_start()
+{
+	
 	$(".error").hide()
 	$(".result").hide()
 	$(".progres").hide()
 	$(".try").hide()
 	$(".cancel").hide()
+	work_enable();
+}
+
+//показывает try again
+function viz_try(data)
+{
+	work_disable()
+	$(".error").hide()
+	$(".progres").hide()
+	$(".result").hide()
+	$(".cancel").show()
+	$(".try").show()
+	$(".try").html(data)
+}
+
+
+//делаем ajax запрос
+function get_ans()
+{
+
+	if (CANCEL_WORK) //если останавливаем - то ничего не делать
+	{}
+	else
+	{
+		
+		work_enable() //включаем форму, чтоб можно было получить данные
+		var str = $("#f").serialize() //получаем значения из формы и сериализуем их
+		work_disable() //включаем форму, чтоб можно было получить данные
+
+		$.ajax({
+			url: "?ajax=1&" +str,
+			cache: false,
+			dataType: 'json',
+			success: onAjaxSuccess,
+			error: onAjaxError
+		});
+	}
+}
+
+//обработчик результата ajax запроса
+//получает json данные
+function onAjaxSuccess(obj)
+{
 	
-	add_author('', '', '')
+	if(CANCEL_WORK) //если останавливаем - то ничего не делать
+	{
 	
-	autodetect_change()
+	}
+	else if (obj.error) //если ошибка
+	{
+		viz_error(obj.error);
+	}
+	else if(obj.result) //успешный результат
+	{
+		
+		viz_result(obj.result)
+		
+		//заполнить авторов и титлы
+		$('#title').val(obj.descr['title'])
+		$('#genre').val(obj.descr['genre']);
+		$('#lang').val(obj.descr['lang'])
+		
+		var authors = obj.descr['authors'];
+		$("#authors").empty()
+		
+		for(i=0; i< authors.length; i++)
+			add_author(authors[i]['first'], authors[i]['middle'], authors[i]['last']);
+			
+		autodetect_change(); //после заполнения авторов, надо их задесайблить
+
+	}
+	else if(obj.progres) //прогресс
+	{
+		viz_work(obj.progres)
+		window.setTimeout(get_ans, 2000);
+	}
+	else if(obj.tryagain) //еще раз
+	{
+		viz_try(obj.tryagain);
+		window.setTimeout(get_ans, 20000);
+	}
+	else //странная ситуация - видимо передли что-то не то
+	{
+		viz_error('Strange internal ajax error')
+	}
+}
+
+//функция срабатывающая при ошибочном ajax запросе
+function onAjaxError(event, request, settings)
+{
+	viz_error( "Internal ajax error");
+}
+
+
+//когда DOM загрузился, можно продолжить
+$(document).ready(function(){
+	
+	preload_images();
+	
+	viz_start();
+	
+	add_author('', '', '');
+	
+	//после заполнения авторов - надо их задисайблить
+	autodetect_change();
 
 	//открыть, закрыть форму с дескрипшеном
 	$("#descr_off").click(function(){
@@ -209,131 +357,29 @@ $(document).ready(function(){
 		do_example();
 	});
 	
+	//если нажать кнопку отмена
+	$("#cancel").click(function(){
+		CANCEL_WORK = true;
+		viz_start();
+	});
 	
-	$("#cancel").click(
-		function(){
-			CANCEL = true;
-			do_cancel()
-		}
-	);
-	
+	//сабмит формы
 	$("form").submit(function(){
-			extend_urls();
-			$(".error").html('');
-			$(".error").hide();
-			$(".try").html('');
-			$(".try").hide();
-			$(".result").html('');
-			$(".result").hide('');
-			$(".cancel").show('');
-			$(".progres").show('');
-			$(".progres").html('<center><img src = "/misc/progress_big.gif" /></center>');
 			
-			CANCEL = false;
+			extend_urls(); //добавляем к урлам http
 			
-			$(".error").ajaxError(function(event, request, settings){
-				$(this).html("<li>Ajax error requesting page " + settings.url + "</li>");
-				$(".progres").hide('');
-				$(".error").show();
-			});
+			viz_work('<center><img src = "/misc/progress_big.gif" /></center>') //показыываем прогресс
+			
+			CANCEL_WORK = false;
+			
 			get_ans();
 			return false
 		}
 	)
-
-
-	function get_ans()
-	{
-
-		if (CANCEL)
-		{
-			
-		}
-		else
-		{
-			work_enable();
-			var str = $("#f").serialize()
-			work_disable();
-			$.getJSON("?ajax=1&" +str, onAjaxSuccess)
-		}
-	}
-	
-	function do_cancel()
-	{
-		work_enable();
-		$(".progres").hide()
-		$(".try").hide()
-		$(".cancel").hide()
-		$(".result").hide()
-		$(".error").hide()
-	}
-	
-	function onAjaxSuccess(obj)
-	{
-		
-		if(CANCEL)
-		{
-		
-		}
-		else if (obj.error)
-		{
-			work_enable();
-			$(".progres").hide()
-			$(".cancel").hide()
-			$(".try").hide()
-			$(".error").show()
-			$(".error").html(obj.error)
-		}
-		else if(obj.result)
-		{
-			work_enable();
-			$(".progres").hide()
-			$(".cancel").hide()
-			$(".try").hide()
-			$(".result").show()
-			$(".result").html(obj.result)
-			
-			$('#title').val(obj.descr['title'])
-			$('#genre').val(obj.descr['genre']);
-			$('#lang').val(obj.descr['lang'])
-			
-			var authors = obj.descr['authors'];
-			$("#authors").empty()
-			
-			for(i=0; i< authors.length; i++)
-				add_author(authors[i]['first'], authors[i]['middle'], authors[i]['last']);
-			
-			autodetect_change()
-		}
-		else if(obj.progres)
-		{
-			
-			$(".try").hide()
-			$(".progres").show()
-			$(".progres").html(obj.progres)
-			window.setTimeout(get_ans, 2000);
-		}
-		else if(obj.tryagain)
-		{
-			$(".progres").hide()
-			$(".try").show()
-			$(".try").html(obj.tryagain)
-			window.setTimeout(get_ans, 20000);
-		}
-		else
-		{
-			work_enable();
-			$(".progres").hide()
-			$(".try").hide()
-			$(".cancel").hide()
-			$(".error").show()
-			$(".error").html('Ajax error')
-		}
-	}
-	
-	if ($("form #doit").attr('value'))
-	{
-		$("form ").submit()
-	}
-	
 });
+
+//если есть флаг, что надо сразу запускать процесс - то засабмиттить форму
+if ($("form #doit").attr('value'))
+{
+	$("form ").submit()
+}

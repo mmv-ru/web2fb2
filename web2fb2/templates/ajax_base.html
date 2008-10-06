@@ -8,13 +8,9 @@ $def with (form, descr)
 <style type="text/css" media="all">
 @import "misc/styleajax.css";
 </style>
-<script src="misc/jquery-1.2.6.js"></script>
-<script src="misc/jquery-ui-personalized.js"></script>
-<script src="misc/myajax.js"></script>
-
-
-
-</script>
+<script type="text/javascript" src="misc/jquery-1.2.6.js"></script>
+<script type="text/javascript" src="misc/jquery-ui-personalized.js"></script>
+<script type="text/javascript" src="misc/myajax.js"></script>
 </head>
 <body>
 
@@ -62,8 +58,6 @@ pageTracker._trackPageview();
   </table>
 </center>
 
-
-
 <h5 >Beta version.
     Please add bug (with URL and short description) <a href = 'http://trac2.assembla.com/web2fb2/newticket'>here.</a> </h5>
 </div>
@@ -73,9 +67,11 @@ pageTracker._trackPageview();
   <div id = 'divurl'>
 $:form    
   </div>
-  <h5 class = 'tab'><span class = 'descr_toggle' id = 'descr_on'>► FB2 description</span><span class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</span></h5>
-  <div id = 'descr_div' style="display: none;">
+  <div id = 'descr_form'>
+	<div class = 'tab'><span class = 'descr_toggle' id = 'descr_on'>► FB2 description</span><span class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</span></div>
+	<div id = 'descr_div' style="display: none;">
 $:descr
+	</div>
   </div>
 </div>
 </form>

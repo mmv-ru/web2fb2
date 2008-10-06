@@ -1,24 +1,13 @@
 $def with (title, author_first, author_middle, author_last, genres, cur_genre, lang)
 
-    <table>
-      <tr>
-        <td colspan = "4">
-        <input name="autodetect" id = "autodetect" type="checkbox" value="1" checked> Autodetect
-        <br/>
-        <br/>
-        </td>
-      </tr>
-      <tr>
-        <td>Title:</td>
-        <td colspan="3"><input class='descr' type="text" name="title" id="title" size="74" maxlength="256" value = '$title' /></td>
-      </tr>
-	</table>
-	<table id = 'authors'>
-	</table>
-	<table>
-      <tr>
-        <td>Genre:</td>
-        <td colspan="2"><select name="genre" id="genre" class='descr'>
+    
+<div><input name="autodetect" id = "autodetect" type="checkbox" value="1" checked /> Autodetect</div>
+
+<div>Title: <input class='descr' type="text" name="title" id="title" size="74" maxlength="256" value = '$title' /></div>
+
+<table id = 'authors'></table>
+
+<div>Genre: <select name="genre" id="genre" class='descr'>
 $for genre in genres:
     $if genre[0] == '':
         <optgroup label="$genre[1]">
@@ -27,20 +16,9 @@ $for genre in genres:
     $else:
         <option value="$genre[0]">$genre[1]</option>
 
-          </select>
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>Language:</td>
-        <td align="left"><input class='descr' type="text" name="lang" id="lang" size="2" maxlength="2" value = '$lang' /></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td align="right"><input type="submit" value = "Apply"/></td>
-      </tr>
-    </table>
+
+</select>
+</div>
+
+<div>Language:<input class='descr' type="text" name="lang" id="lang" size="2" maxlength="2" value = '$lang' /></div>
+<div><input type="submit" value = "Apply"/></div>

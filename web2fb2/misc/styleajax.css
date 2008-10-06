@@ -6,8 +6,12 @@ body {
 	border: solid 1px #c4c4c4;
 	background-color: #f7f7f7;
 	overflow:visible;
-	width: 41em;
+	width: 40em;
 	margin: 0 auto 0 auto;
+}
+
+.url {
+	width: 37em;
 }
 
 .example {

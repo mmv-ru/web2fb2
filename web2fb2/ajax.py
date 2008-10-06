@@ -17,7 +17,6 @@ render = web.template.render('templates/')
 
 import webutils
 import prior
-
 import log
 
 def main():
@@ -36,10 +35,19 @@ def main():
 
 def base():
 	
+	form = cgi.FieldStorage()
+	
+	url = form.getvalue('url', '')
+	
+	if form.getvalue('doit', ''): doit = True
+	else: doit = False
+	
+	if not form.getvalue('img', False): img = True;
+	else: img = False
 	
 	webutils.print_page(
 		render.ajax_base(
-			render.ajax_form('', True, False, False, False),
+			render.ajax_form(url, img, False, doit, False),
 			render.ajax_descr(
 				'',
 				'',

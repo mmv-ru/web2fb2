@@ -5,7 +5,7 @@ $def with (url, is_img, is_tab, doit, is_pre)
 <div id = 'urls'>
   <div id = 'url_row'>
 	<strong>Url:</strong>
-	<input name="url" id="url" type="text" size="78" maxlength="256" value="$url" />
+	<input name="url" id="url" class = 'url' type="text" maxlength="256" value="$url" />
 	<span id = 'addurl'>[+]</span>
 	<span id = 'remurl'>[-]</span>
   </div>
@@ -14,13 +14,12 @@ $def with (url, is_img, is_tab, doit, is_pre)
 
 $if doit:
     <input type="hidden" id="doit" value = "true"/>
-	
-</br>
+
 <div id = 'params' class = 'params'>
 $if is_img:
-    <input name="img" id="img" type="checkbox" value="1" checked>
+    <input name="img" id="img" type="checkbox" value="1" checked />
 $else:
-    <input name="img" id="img" type="checkbox" value="1">
+    <input name="img" id="img" type="checkbox" value="1" />
 	
 with images 
 	<span class = 'adv_params_toggle' id = 'adv_params_on' >show advanced options</span><span class = 'adv_params_toggle'id = 'adv_params_off' style="display: none;">hide advanced options</span>
@@ -29,20 +28,20 @@ with images
 <span  id = 'adv_params' style="display: none;">
 
 $if is_tab:
-    <input name="tab" id="tab" type="checkbox" value="1" checked>
+    <input name="tab" id="tab" type="checkbox" value="1" checked />
 $else:
-    <input name="tab" id="tab" type="checkbox" value="1">
+    <input name="tab" id="tab" type="checkbox" value="1" />
 	
 with tables<br/>
 
 $if is_pre:
-    <input name="pre" id="pre" type="checkbox" value="1" checked>
+    <input name="pre" id="pre" type="checkbox" value="1" checked />
 $else:
-    <input name="pre" id="pre" type="checkbox" value="1">
+    <input name="pre" id="pre" type="checkbox" value="1" />
 	
 with &lt;code&gt; tag <small>(not сompatible with old FB2 readers)</small><br/>
         
-	<input name="old_h2fb2" id='old_h2fb2' type="checkbox" value="1"> use old h2fb2 engine
+	<input name="old_h2fb2" id='old_h2fb2' type="checkbox" value="1" /> use old h2fb2 engine
 
 </span>
 </td>
