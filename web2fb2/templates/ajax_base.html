@@ -26,7 +26,7 @@ pageTracker._trackPageview();
 </script>
 <!-- end of google analytics -->
 
-<div id="content">
+<div class="content">
 
 <div class = 'donate'>
 <!-- pay-pal -->
@@ -63,33 +63,33 @@ pageTracker._trackPageview();
 </div>
 
 <form id = 'f'>
-<div class = 'form_div' id = 'box_form'>
-  <div id = 'box_url'>
+<table class = "box_form_container_tab"><tr><td>
+<div class = 'box_form' id = 'box_form'>
+  <div id = 'box_url' class = 'box_url'>
 $:form    
   </div>
-  <div id = 'descr_form'>
-	<div class = 'tab'><span class = 'descr_toggle' id = 'descr_on'>► FB2 description</span><span class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</span></div>
-	<div id = 'box_descr' style="display: none;">
+  <div class = 'descr_toggle' id = 'descr_on'>► FB2 description</div><div class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</div>
+  <div id = 'box_descr' class = 'box_descr' style="display: none;">
 $:descr
-	</div>
   </div>
-</div>
+</span>
+</td></tr></table>
 </form>
 
-<div class = 'cancel' id = 'box_cancel'><input type="button" id="cancel" value="Cancel"/></div>
+<div class = 'box_cancel' id = 'box_cancel'><input type="button" id="cancel" value="Cancel"/></div>
 
-<div class = 'progres' id = 'box_progres'></div>
+<div class = 'box_progres' id = 'box_progres'></div>
 
-<div class = 'try' id = 'box_try'></div>
+<div class = 'box_try' id = 'box_try'></div>
 
-<div class = 'error' id = 'box_error'></div>
+<div class = 'box_error' id = 'box_error'></div>
 
-<div class = 'result' id = 'box_result'></div>
+<div class = 'box_result' id = 'box_result'></div>
 
-<div id = 'prefooter'></div>
+<div class = 'prefooter'></div>
 </div>
 
-<div class = "bottom" id="footer">
+<div class = "bottom">
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td width="30%" align="left">&nbsp;&nbsp;Development: Ivan El'chin</td>

@@ -1,11 +1,11 @@
 $def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg, preview_link)
-<b>Ready: <br/></b><a href = '$file_url'>$file_name</a> - $file_size KB<br />
+<div class='result_url'><b>Ready: <br/></b><a href = '$file_url'>$file_name</a> - $file_size KB<br /></div>
 $if valid:
-	<span id='valid_fb2'>&nbsp;valid FB2&nbsp; </span>
+	<span class='valid_fb2'>&nbsp;valid FB2&nbsp;</span>
 $else:
-	<span id='invalid_fb2' title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
-<br />
+	<span class='invalid_fb2' title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
 
+<br />
 <span id = 'preview_on' class = 'preview_on'><u>preview</u></span>
 
 <script src="misc/myajax_preveiw.js"></script>

@@ -1,16 +1,19 @@
 $def with (url, is_img, is_tab, doit, is_pre)
 	
-<table>
-<tr><td>
-<div id = 'urls'>
-  <div id = 'url_row'>
+<table><tr>
+<td>
+<div id = 'urls' class = 'urls'>
+  <div id = 'url_row' class = 'url_row'>
 	<strong>Url:</strong>
 	<input name="url" id="url" class = 'url' type="text" maxlength="256" value="$url" />
-	<span id = 'addurl'>[+]</span>
-	<span id = 'remurl'>[-]</span>
+	<span id = 'addurl' class = 'addurl'>[+]</span>
+	<span id = 'remurl' class = 'remurl'>[-]</span>
   </div>
   <span id = 'example' class = 'example'>example: <span class = 'example_url' id = 'example_url'>http://lib.ru/INOFANT/BRADBURY/gorod.txt</span></span>
 </div>
+</td>
+<td><input name="" type="submit" value=" Do "/></td>
+</tr></table>
 
 $if doit:
     <input type="hidden" id="doit" value = "true"/>
@@ -44,5 +47,3 @@ with &lt;code&gt; tag <small>(not сompatible with old FB2 readers)</small><br/>
 	<input name="old_h2fb2" id='old_h2fb2' type="checkbox" value="1" /> use old h2fb2 engine
 
 </span>
-</td>
-<td><input name="" type="submit" value=" Do "/></td></tr></table>
