@@ -55,16 +55,14 @@ function add_author(first, middle, last, source)
 function work_disable()
 {
 	IN_WORK = true;
-	$(".descr").attr({disabled: true});
-	$("form input").attr({disabled: true});
+	$("#f input,select").attr({disabled: true});
 }
 	
 //сделать поля ввода автивными
 function work_enable()
 {
 	IN_WORK = false;
-	$(".descr").attr({disabled: false});
-	$("form input").attr({disabled: false});
+	$("#f input, select").attr({disabled: false});
 	autodetect_change();
 	change_ext_features_state();
 }
@@ -73,16 +71,16 @@ function work_enable()
 function autodetect_change()
 {
 	if( $("#autodetect").attr('checked') )
-		$("#descr_div input, select").not('#autodetect').attr({disabled: true})
+		$("#box_descr input, select").not('#autodetect').not('#descr_applay').attr({disabled: true})
 	else
-		$("#descr_div input, select").not('#autodetect').attr({disabled: false})
+		$("#box_descr input, select").not('#autodetect').not('#descr_applay').attr({disabled: false})
 }
 
 
 //скрыть дескрипшн
 function description_hide()
 {
-	$("#descr_div").hide("fast", function(){
+	$("#box_descr").hide("fast", function(){
 		$('#descr_off').hide();
 		$('#descr_on').show();
 	});
@@ -91,7 +89,7 @@ function description_hide()
 //показать дескрипшн
 function description_show()
 {
-	$("#descr_div").show("fast", function(){
+	$("#box_descr").show("fast", function(){
 		$('#descr_on').hide();
 		$('#descr_off').show();
 	});
@@ -100,7 +98,7 @@ function description_show()
 //показать расширенные параметры
 function adv_params_show()
 {
-	$("#adv_params").show("fast", function(){
+	$("#box_adv_params").show("fast", function(){
 		$("#adv_params_on").hide();
 		$("#adv_params_off").show();
 	});
@@ -109,7 +107,7 @@ function adv_params_show()
 //скрыть расширенные параметры
 function adv_params_hide()
 {
-	$("#adv_params").hide("fast", function(){
+	$("#box_adv_params").hide("fast", function(){
 		$("#adv_params_off").hide();
 		$("#adv_params_on").show();
 	});
@@ -181,11 +179,11 @@ function preload_images()
 //показываем ощибку, разрешаем управлять настройками
 function viz_error(msg)
 {
-	$(".progres").hide();
-	$(".error").show();
-	$(".error").html(msg);
-	$(".cancel").hide()
-	$(".try").hide()
+	$("#box_progres").hide();
+	$("#box_error").show();
+	$("#box_error").html(msg);
+	$("#box_cancel").hide()
+	$("#box_try").hide()
 	
 	work_enable();
 }
@@ -195,13 +193,13 @@ function viz_error(msg)
 function viz_work(data)
 {
 	
-	$(".error").hide();
-	$(".try").hide();
-	$(".result").hide();
+	$("#box_error").hide();
+	$("#box_try").hide();
+	$("#box_result").hide();
 	
-	$(".cancel").show('');
-	$(".progres").show();
-	$(".progres").html(data);
+	$("#box_cancel").show('');
+	$("#box_progres").show();
+	$("#box_progres").html(data);
 	work_disable()
 }
 
@@ -209,11 +207,11 @@ function viz_work(data)
 //показывает результат
 function viz_result(data)
 {
-	$(".progres").hide()
-	$(".cancel").hide()
-	$(".try").hide()
-	$(".result").show()
-	$(".result").html(data)
+	$("#box_progres").hide()
+	$("#box_cancel").hide()
+	$("#box_try").hide()
+	$("#box_result").show()
+	$("#box_result").html(data)
 	work_enable();
 }
 
@@ -221,11 +219,11 @@ function viz_result(data)
 function viz_start()
 {
 	
-	$(".error").hide()
-	$(".result").hide()
-	$(".progres").hide()
-	$(".try").hide()
-	$(".cancel").hide()
+	$("#box_error").hide()
+	$("#box_result").hide()
+	$("#box_progres").hide()
+	$("#box_try").hide()
+	$("#box_cancel").hide()
 	work_enable();
 }
 
@@ -233,12 +231,12 @@ function viz_start()
 function viz_try(data)
 {
 	work_disable()
-	$(".error").hide()
-	$(".progres").hide()
-	$(".result").hide()
-	$(".cancel").show()
-	$(".try").show()
-	$(".try").html(data)
+	$("#box_error").hide()
+	$("#box_progres").hide()
+	$("#box_result").hide()
+	$("#box_cancel").show()
+	$("#box_try").show()
+	$("#box_try").html(data)
 }
 
 
@@ -408,7 +406,7 @@ $(document).ready(function(){
 });
 
 //если есть флаг, что надо сразу запускать процесс - то засабмиттить форму
-if ($("form #doit").attr('value'))
+if ($("#doit").attr('value'))
 {
-	$("form ").submit()
+	$("#f").submit()
 }
