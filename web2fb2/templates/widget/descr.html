@@ -1,0 +1,39 @@
+$def with (title, author_first, author_middle, author_last, genres, cur_genre, lang)
+
+    
+<div class='box_descr_autodetect'><input name="autodetect" id = "autodetect" class = "autodetect" type="checkbox" value="1" checked /> Autodetect</div>
+
+<div class='box_descr_title'>Title: <input type="text" class= 'descr_title' name="title" id="title" maxlength="256" value = '$title' /></div>
+
+<span id = 'authors_source' style = 'display:none'>
+	<div id = 'author' class='box_descr_author'>
+		Author:
+		<input class = "author_first" id="author_first" type="text" maxlength="256"/>
+		<input class = "author_middle" id="author_middle" type="text" maxlength="256" />
+		<input class = "author_last" id="author_last" type="text" maxlength="256" />
+	</div>
+</span>
+
+<div>
+	<span class = "author_first_label">first name</span>
+	<span class = "author_middle_label">middle name</span>
+	<span class = "author_last_label">last name</span>
+</div>
+<div id = 'authors' class = 'authors'>
+</div>
+
+<div class = 'box_descr_genre'>Genre: <select name="genre" id="genre" class='descr'>
+$for genre in genres:
+    $if genre[0] == '':
+        <optgroup label="$genre[1]">
+    $elif genre[0] == cur_genre:
+        <option value="$genre[0]" selected='selected'>$genre[1]</option>
+    $else:
+        <option value="$genre[0]">$genre[1]</option>
+
+
+</select>
+</div>
+
+<div class = 'box_descr_lang'>Language:<input type="text" name="lang" id="lang" size="2" maxlength="2" value = '$lang' /></div>
+<div class = 'box_descr_applay'><input type="submit" id = 'descr_applay' value = "Apply"/></div>

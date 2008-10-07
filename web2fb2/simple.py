@@ -12,7 +12,7 @@ from string import Template
 import os
 
 import web.template
-render = web.template.render('templates/')
+render = web.template.render('templates/simple/')
 import webutils
 
 import process

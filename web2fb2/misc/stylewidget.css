@@ -1,0 +1,185 @@
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:0.8em;
+}
+
+html {
+	font-size:80%;
+}
+
+.box_form_container_tab {
+	border-collapse: collapse;
+	margin: 0 auto 0 auto;
+}
+
+.box_form {
+
+	border: solid 1px #c4c4c4;
+	background-color: #f7f7f7;
+}
+
+.box_url{
+	margin: 0.5em;
+}
+
+.urls{
+	margin: 0em 1em 0.5em 0em;
+}
+
+.url_row {
+	margin: 0.2em 0.2em 0em 0.2em;
+}
+
+.url {
+	width: 30em;
+}
+
+.example {
+	font-size: x-small;
+	margin: 0 0 0 4em;
+}
+
+.example_url {
+	border-bottom: 1px dashed #000000;
+	cursor: pointer;
+}
+
+.img_param{
+	float: left;
+}
+
+.descr_toggle
+{
+	border: 0;
+	background-color: #e3e2e2;
+	padding: 0.3em 0 0.3em 0;
+	margin: 0 0 0 0;
+	font-size: small;
+	cursor: pointer;
+}
+
+
+.box_descr {
+	padding: 0.5em 0.5em 0.5em 0.5em;
+	background-color: #f0f0f0;
+}
+
+.descr_title {
+	width: 30em;
+}
+
+.box_descr_autodetect, .box_descr_author, .box_descr_lang {
+	margin: 0 0 0.2em 0;
+}
+
+.box_descr_title {
+	margin: 0 0 0 0;
+}
+
+.box_descr_genre {
+	margin: 0.5em 0 0.2em 0;
+}
+
+.author_first_label {
+	margin: 0 0 0 4em;
+	height: 0.2em;
+	font-size: x-small;
+}
+
+.author_middle_label {
+	margin: 0 0 0 6em;
+	height: 0.2em;
+	font-size: x-small;
+}
+.author_last_label {
+	margin: 0 0 0 4em;
+	height: 0.2em;
+	font-size: x-small;
+}
+
+
+.box_error {
+	display: none;
+	color: red;
+	width:37em;
+	text-align: center;
+	margin: 0 auto 0 auto;
+	padding: 2em 1em 2em 1em;
+	font-weight: bolder;
+	overflow:visible;
+}
+
+.box_try {
+	display: none;
+	overflow:visible;
+	font-weight: bold;
+	width:30em;
+	text-align: center;
+	margin: 0 auto 0 auto;
+	padding: 1em 1em 1em 1em;
+}
+
+.box_result {
+	display: none;
+	overflow:visible;
+	width:37em;
+	text-align: center;
+	margin: 0 auto;
+	padding: 2em 1em 2em 1em;
+}
+
+.box_progres {
+	display: none;
+	overflow:visible;
+	width:15em;
+	margin: 0 auto 0 auto;
+	padding: 1em 1em 1em 1em;
+}
+
+.box_cancel {
+	display: none;
+	overflow:visible;
+	text-align: center;
+	width:15em;
+	margin: 0 auto 0 auto ;
+	padding: 1em 1em 1em 1em;
+}
+
+.result_url {
+	margin: 0 0 0.2em 0;
+}
+
+.valid_fb2 {
+  margin: 1em;
+  border: 2px solid #33CC00;
+  background-color: #CCFF99;
+}
+
+.invalid_fb2 {
+  background-color: #FF9999;
+  border: 2px solid #FF3333;
+  
+}
+
+.title {
+	overflow:visible;
+	text-align: center;
+	width:40em;
+	margin: 0 auto 0 auto ;
+	
+}
+
+.title h2{
+	margin-bottom: 0px;
+	margin-top: 0px;
+}
+
+input {
+	font-size: 0.9em;
+}
+select {
+	font-size: 0.9em;
+}
+
+
+

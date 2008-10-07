@@ -1,0 +1,26 @@
+$def with (url, is_img, is_tab, doit, is_pre)
+	
+<table><tr>
+<td>
+<div id = 'urls' class = 'urls'>
+  <div id = 'url_row' class = 'url_row'>
+	<strong>Url:</strong>
+	<input name="url" id="url" class = 'url' type="text" maxlength="256" value="$url" />
+  </div>
+  <span id = 'example' class = 'example'>example: <span class = 'example_url' id = 'example_url'>http://lib.ru/INOFANT/BRADBURY/gorod.txt</span></span>
+</div>
+</td>
+<td><input name="" type="submit" value=" Do "/></td>
+</tr></table>
+
+$if doit:
+    <input type="hidden" id="doit" value = "true"/>
+
+<div id = 'params' class = 'params'>
+$if is_img:
+    <input name="img" id="img" type="checkbox" value="1" checked />
+$else:
+    <input name="img" id="img" type="checkbox" value="1" />
+	
+with images
+</div>

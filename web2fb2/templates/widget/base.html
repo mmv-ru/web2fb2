@@ -1,0 +1,52 @@
+$def with (form, descr)
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Web2FB2</title>
+<style type="text/css" media="all">
+@import "misc/stylewidget.css";
+</style>
+<script type="text/javascript" src="misc/jquery-1.2.6.js"></script>
+<script type="text/javascript" src="misc/myajax.js"></script>
+<script type="text/javascript">
+$('<img>').attr('src','/misc/done.gif');
+$('<img>').attr('src','/misc/blank.gif');
+$('<img>').attr('src','/misc/progress.gif');
+$('<img>').attr('src','/misc/progress_mid.gif');
+</script></head>
+<body>
+
+<div class="content">
+
+<div class = "title">
+<h2>Web2FB2</h2>
+</div>
+
+<form id = 'f'>
+<table class = "box_form_container_tab"><tr><td>
+<div class = 'box_form' id = 'box_form'>
+  <div id = 'box_url' class = 'box_url'>
+$:form    
+  </div>
+  <div class = 'descr_toggle' id = 'descr_on'>► FB2 description</div><div class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</div>
+  <div id = 'box_descr' class = 'box_descr' style="display: none;">
+$:descr
+  </div>
+</span>
+</td></tr></table>
+</form>
+
+<div class = 'box_cancel' id = 'box_cancel'><input type="button" id="cancel" value="Cancel"/></div>
+
+<div class = 'box_progres' id = 'box_progres'></div>
+
+<div class = 'box_try' id = 'box_try'></div>
+
+<div class = 'box_error' id = 'box_error'></div>
+
+<div class = 'box_result' id = 'box_result'></div>
+
+</body>
+</html>

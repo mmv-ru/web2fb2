@@ -164,17 +164,6 @@ function change_ext_features_state(){
 	}
 }
 
-//предварительная загрузка картинок
-function preload_images()
-{
-	$('<img>').attr('src','/misc/done.gif');
-	$('<img>').attr('src','/misc/blank.gif');
-	$('<img>').attr('src','/misc/progress.gif');
-	$('<img>').attr('src','/misc/progress_mid.gif');
-	$('<img>').attr('src','/misc/progress_big.gif');
-
-}
-
 
 //показываем ощибку, разрешаем управлять настройками
 function viz_error(msg)
@@ -321,9 +310,6 @@ function onAjaxError(event, request, settings)
 //когда DOM загрузился, можно продолжить
 $(document).ready(function(){
 
-	
-	preload_images();
-	
 	viz_start();
 
 	//открыть, закрыть форму с дескрипшеном

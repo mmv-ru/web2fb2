@@ -13,7 +13,10 @@ import process
 
 import json
 import web.template
-render = web.template.render('templates/')
+
+form = cgi.FieldStorage()
+
+render = web.template.render('templates/ajax')
 
 import webutils
 import prior
@@ -46,9 +49,9 @@ def base():
 	else: img = False
 	
 	webutils.print_page(
-		render.ajax_base(
-			render.ajax_form(url, img, False, doit, False),
-			render.ajax_descr(
+		render.base(
+			render.form(url, img, False, doit, False),
+			render.descr(
 				'',
 				'',
 				'',
@@ -84,7 +87,7 @@ def ajax():
 			urls.append(url)
 	
 	if not urls:
-		webutils.print_page( json.write({'error': render.ajax_error('Bad url')}) )
+		webutils.print_page( json.write({'error': render.error('Bad url')}) )
 	else:
 		log.info('We get urls: %s' % urls)
 	
@@ -152,17 +155,17 @@ def ajax():
 		try:
 			progres = process.do(params, sid, True)
 		except process.SessRet, er:
-				webutils.print_page( json.write({'tryagain': render.ajax_try( er.value['place'], prior.priors.get( er.value['prior'], 'unknown') )}))
+				webutils.print_page( json.write({'tryagain': render.trys( er.value['place'], prior.priors.get( er.value['prior'], 'unknown') )}))
 				log.debug('Try later')
 		except Exception, er:
-				webutils.print_page( json.write({'error': render.ajax_error(str(er))}) )
+				webutils.print_page( json.write({'error': render.error(str(er))}) )
 				log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
 
 		else:
 			log.debug(str(progres))
 			
 			if progres.error:
-				webutils.print_page( json.write({'error': render.ajax_error(str(progres.error))}) )
+				webutils.print_page( json.write({'error': render.error(str(progres.error))}) )
 				log.debug('progres return error: %s' % progres.error)
 
 			elif progres.done:
@@ -172,7 +175,7 @@ def ajax():
 				webutils.print_page(
 					json.write(
 						{
-							'result':render.ajax_result(
+							'result':render.result(
 								stat.urls,
 								'%.1f' % stat.work_time,
 								stat.img,
@@ -201,7 +204,7 @@ def ajax():
 				)
 			else:
 				webutils.print_page(
-					json.write({'progres': render.ajax_progres(
+					json.write({'progres': render.progres(
 						progres.msgs,
 						progres.level,
 						[x for x in xrange(len(progres.msgs))]

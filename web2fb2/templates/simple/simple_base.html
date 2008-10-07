@@ -1,105 +1,71 @@
-$def with (form, descr)
+$def with (body, refresh=False)
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Web2FB2</title>
-<style type="text/css" media="all">
-@import "misc/styleajax.css";
-</style>
-<script type="text/javascript" src="misc/jquery-1.2.6.js"></script>
-<script type="text/javascript" src="misc/jquery-ui-personalized.js"></script>
-<script type="text/javascript" src="misc/myajax.js"></script>
-</head>
-<body>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+$if refresh:
+    <META HTTP-EQUIV="Refresh" CONTENT="20">
+<title>web2fb2</title>
+<head><body>
 
-<!-- google analytics -->
+<div align="center" style = "background-color:#E7E7E7;">
+  <table width="100%" cellpadding="5">
+    <tr valign="bottom">
+      <td width="30%" align="left">Development: Ivan El'chin</td>
+      <td align="center" valign="middle">Support and Sponsorship:<br />
+        <a href="http://www.iscriptum.com/"><img border="0" src="http://www.iscriptum.com/iscriptum_logo_136x37_tr.png" /><br />
+        eReaders for fb2</a></td>
+      <td width="30%" align="right">Project management on assembla.com: <a href="http://www.assembla.com/spaces/web2fb2">web2fb2</a></td>
+    </tr>
+  </table>
+</div>
+
+
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
+
     <script type="text/javascript">
 var pageTracker = _gat._getTracker("UA-3495198-3");
 pageTracker._initData();
 pageTracker._trackPageview();
 </script>
-<!-- end of google analytics -->
 
-<div class="content">
-
-<div class = 'donate'>
-<!-- pay-pal -->
-    
-<!-- end of pay-pal -->
-</div>
-
-<div class = "title">
-<center>
-  <table cellpadding="0" cellspacing="0">
-    <tr>
-      <td width="30%">&nbsp;</td>
-	  <td align="center"><h2>Web2FB2</h2></td>
-	  <td width="30%" align = "left" style = 'padding-left:1em'>
-	  
-	  <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+</br>
+</br>
+</br>
+</br>
+</br>
+<div align="center" >
+<table>
+<tr>
+<td width = '30%'> &nbsp;</td>
+<td align = 'center'><h1 style= "margin-bottom: 0px; margin-top: 0px">web2fb2</h1></td>
+<td width = '30%' style = 'padding-left:1em' valign="middle">
+    <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
       <input type="hidden" name="cmd" value="_s-xclick">
       <input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but04.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
       <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
       <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHTwYJKoZIhvcNAQcEoIIHQDCCBzwCAQExggEwMIIBLAIBADCBlDCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20CAQAwDQYJKoZIhvcNAQEBBQAEgYBWqLkfM9sxU4WzyOY2cHleq/tfPIYVEriPL6LTDZxn+Emhk1yZErTWIa9EVrYCnevHqpzbWP7WJ/nd6fEAbKOo/tNV7T1vf5bVy5q4iRzrsK3jcguJsUyJiInEqUBqLKpBUeGQsR7Ak3PEFS3aQ+bt4mfyawGoith0EsynVAGwzzELMAkGBSsOAwIaBQAwgcwGCSqGSIb3DQEHATAUBggqhkiG9w0DBwQI2GVMFdteLpmAgajX+76S6ZIDfcfKOw0dtP+gG8Ni+seKGcxjwLGcAetnF+c6GFwjbDAWq5FkyokjC41oG4Ioo1Ywjf/3JA3ALapnz1VnAw/gUpjrKn/59rexHofiCV4c1O4wjXulmWJA+B4o2NUbsMMcmgLNjWUrkf1flBmvHBPR63UrlnM0e77zUdLsFQWFdXif1ZmcX/lEoQj8/WHAvz7708V8uuojPrdHQ/DCG1EvMvOgggOHMIIDgzCCAuygAwIBAgIBADANBgkqhkiG9w0BAQUFADCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20wHhcNMDQwMjEzMTAxMzE1WhcNMzUwMjEzMTAxMzE1WjCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMFHTt38RMxLXJyO2SmS+Ndl72T7oKJ4u4uw+6awntALWh03PewmIJuzbALScsTS4sZoS1fKciBGoh11gIfHzylvkdNe/hJl66/RGqrj5rFb08sAABNTzDTiqqNpJeBsYs/c2aiGozptX2RlnBktH+SUNpAajW724Nv2Wvhif6sFAgMBAAGjge4wgeswHQYDVR0OBBYEFJaffLvGbxe9WT9S1wob7BDWZJRrMIG7BgNVHSMEgbMwgbCAFJaffLvGbxe9WT9S1wob7BDWZJRroYGUpIGRMIGOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxFDASBgNVBAoTC1BheVBhbCBJbmMuMRMwEQYDVQQLFApsaXZlX2NlcnRzMREwDwYDVQQDFAhsaXZlX2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNvbYIBADAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAIFfOlaagFrl71+jq6OKidbWFSE+Q4FqROvdgIONth+8kSK//Y/4ihuE4Ymvzn5ceE3S/iBSQQMjyvb+s2TWbQYDwcp129OPIbD9epdr4tJOUNiSojw7BHwYRiPh58S1xGlFgHFXwrEBb3dgNbMUa+u4qectsMAXpVHnD9wIyfmHMYIBmjCCAZYCAQEwgZQwgY4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEUMBIGA1UEChMLUGF5UGFsIEluYy4xEzARBgNVBAsUCmxpdmVfY2VydHMxETAPBgNVBAMUCGxpdmVfYXBpMRwwGgYJKoZIhvcNAQkBFg1yZUBwYXlwYWwuY29tAgEAMAkGBSsOAwIaBQCgXTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA0MTEyMzA3MzRaMCMGCSqGSIb3DQEJBDEWBBS/FP5XKhJLaTCBbj8akLC8zSE2ijANBgkqhkiG9w0BAQEFAASBgDg54tQdi2s9xws5kIUofBHPFe6zlVqnmpYaPxy6pUQ7DIIOL0B8v11x7T7Zyv0tdTMa0JK4epUQWlJREfm79oDuzJggEnZh6l8H944WuID7HTUwKnM73mbh++1L0pIP9qDpqqo+hyNLvPb88cEjhAV2K1IgYfHO3WKKCtNX95q5-----END PKCS7-----
 ">
     </form>
-	
-	  </td>
-	</tr>
-	<tr>
-	  <td colspan="3" align="center"><span>converting URL/web-page to file in fb2 format</span></td>
-	</tr>
-  </table>
-</center>
-
-<h5 >Beta version.
-    Please add bug (with URL and short description) <a href = 'http://trac2.assembla.com/web2fb2/newticket'>here.</a> </h5>
+</td>
+</tr>
+<tr>
+<td align = 'center' colspan = "3"><span style="font-size: 0.8em;">converting URL/web-page to file in fb2 format</span></td>
+</tr>
+</table>
+  
+  <h3 >Beta version.<br/>
+    Please add bug (with URL and short description) <a href = 'http://trac2.assembla.com/web2fb2/newticket'>here.</a> </h3>
 </div>
 
-<form id = 'f'>
-<table class = "box_form_container_tab"><tr><td>
-<div class = 'box_form' id = 'box_form'>
-  <div id = 'box_url' class = 'box_url'>
-$:form    
-  </div>
-  <div class = 'descr_toggle' id = 'descr_on'>► FB2 description</div><div class = 'descr_toggle' id = 'descr_off' style="display: none;">▼ FB2 description</div>
-  <div id = 'box_descr' class = 'box_descr' style="display: none;">
-$:descr
-  </div>
-</span>
-</td></tr></table>
-</form>
+<div align = 'center'>
 
-<div class = 'box_cancel' id = 'box_cancel'><input type="button" id="cancel" value="Cancel"/></div>
+$:body
 
-<div class = 'box_progres' id = 'box_progres'></div>
-
-<div class = 'box_try' id = 'box_try'></div>
-
-<div class = 'box_error' id = 'box_error'></div>
-
-<div class = 'box_result' id = 'box_result'></div>
-
-<div class = 'prefooter'></div>
 </div>
-
-<div class = "bottom">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td width="30%" align="left">&nbsp;&nbsp;Development: Ivan El'chin</td>
-      <td align="right">Support and Sponsorship:</td>
-	  <td width = "1%"><a href="http://www.iscriptum.com/"><img border="0" src="http://www.iscriptum.com/iscriptum_logo_136x37_tr.png" /></a><td>
-	  <td align="left"><a href="http://www.iscriptum.com/">eReaders for fb2</a></td>
-      <td width="30%" align="right">Project management on assembla.com: <a href="http://www.assembla.com/spaces/web2fb2">web2fb2</a>&nbsp;&nbsp;</td>
-    </tr>
-  </table>
-</div>
-
 </body>
 </html>
