@@ -1,34 +1,60 @@
-//глобалная переменная - останавливать выполнение циклических запросов или нет
-CANCEL_WORK = false;
 
-//добавить автора
-function addaut(obj)
+CANCEL_WORK = false; //глобалная переменная - останавливать выполнение циклических запросов или нет
+IN_WORK = false; //глобалная переменная
+
+//хнедлер события добавки автора
+function add_aut(source)
 {
-	if (! $("input", $(obj).parent()).attr('disabled'))
-		add_author($('input:eq(0)', $(obj).parent()).val(), $('input:eq(1)', $(obj).parent()).val(), $('input:eq(2)', $(obj).parent()).val())
+	if( ! IN_WORK)
+		if( ! $("#autodetect").attr('checked') )
+			if( $("#authors > #author").length < 10)
+				add_author(
+					source.children('#author_first').val(),
+					source.children('#author_middle').val(), 
+					source.children('#author_last').val(),
+					source
+				);
 }
 	
 //удалить автора
-function remaut(obj)
+function rem_aut(target)
 {
-	if (! $("input", $(obj).parent()).attr('disabled'))
-		if( $("#authors tr").length > 1)
-			$(obj).parent().remove();
+	if( ! IN_WORK)
+		if( ! $("#autodetect").attr('checked') )
+			if( $("#authors > #author").length > 1)
+				target.remove();
 }
 	
-//добавление самой первой строки автора
-function add_author(first, middle, last)
+
+//добавить автора
+function add_author(first, middle, last, source)
 {
 	id = 0
-	if ($("#authors tr:last input").attr('name'))
-		id = 1 + parseInt($("#authors tr:last input").attr('name').split('|')[1]);
-		
-	$("#authors").append("<tr><td>Author:</td><td><input class='descr' type='text' name='author_first|" + id +"'  size='20' maxlength='256' value = '" + first + "'/><br /><label style='font-size:x-small'>first name</label></td><td><input class='descr' type='text' name='author_middle|" + id +"' size='20' maxlength='256' value = '" + middle + "' /><br /><label style='font-size:x-small'>middle name</label></td><td><input class='descr' type='text' name='author_last|" + id +"' size='20' maxlength='256' value = '" + last + "' /><br /><label style='font-size:x-small'>last name</label></td><td id ='addaut' onClick = 'addaut(this)'>[+]<br />&nbsp;</td><td id ='remaut' onClick = 'remaut(this)'>[-]<br />&nbsp;</td></tr>")
+	
+	if( $("#authors > #author:last input").attr('name'))
+	{
+		id = 1 + parseInt($("#authors > #author:last input").attr('name').split('|')[1]);
+	}
+	
+	
+	var new_aut = $("#authors_source > #author:first").clone(true); //клонируем автора от донора
+	new_aut.children('#author_first').val(first);
+	new_aut.children('#author_first').attr('name', 'author_first|' + id)
+	new_aut.children('#author_middle').val(middle);
+	new_aut.children('#author_middle').attr('name', 'author_middle|' + id)
+	new_aut.children('#author_last').val(last);
+	new_aut.children('#author_last').attr('name', 'author_last|' + id)
+	
+	if(source)
+		new_aut.insertAfter(source);
+	else
+		new_aut.appendTo("#authors");
 }
 
 //сделать поля ввода неаквтивными
 function work_disable()
 {
+	IN_WORK = true;
 	$(".descr").attr({disabled: true});
 	$("form input").attr({disabled: true});
 }
@@ -36,6 +62,7 @@ function work_disable()
 //сделать поля ввода автивными
 function work_enable()
 {
+	IN_WORK = false;
 	$(".descr").attr({disabled: false});
 	$("form input").attr({disabled: false});
 	autodetect_change();
@@ -45,10 +72,10 @@ function work_enable()
 //енаблит, дасаблит поля в дескрипшене
 function autodetect_change()
 {
-	if( $("#descr_div #autodetect").attr('checked') )
-		$(".descr").attr({disabled: true})
+	if( $("#autodetect").attr('checked') )
+		$("#descr_div input, select").not('#autodetect').attr({disabled: true})
 	else
-		$(".descr").attr({disabled: false})
+		$("#descr_div input, select").not('#autodetect').attr({disabled: false})
 }
 
 
@@ -91,38 +118,27 @@ function adv_params_hide()
 //для всех URL добавить http://, если надо
 function extend_urls()
 {
-	var urls = $("#urls > #url_row > #url")
-	for(i=0; i < urls.length; i++)
-	{	
-		old_url = urls[i].value;
-		if (old_url != '')
-			if(old_url.indexOf("://") == -1)
-			{
-				new_url = "http://" + old_url;
-				urls[i].value = new_url;
-			}
-	}
+	$("#urls > #url_row > #url").each(function(){
+		if (this.value != '')
+			if(this.value.indexOf("://") == -1)
+				this.value =  "http://" + this.value
+	});
 }
 
 //добавить урл
 function add_url(source)
 {
-	if (! $("input", $(source).parent()).attr('disabled'))
-	{
+	if( ! IN_WORK)
 		if( $("#urls > #url_row").length < 10)
-		{
-			
-			$(source).parent().clone(true).insertAfter($(source).parent())
-		}
-	}
+			source.clone(true).insertAfter(source)
 }
 
 //удалить урл
 function rem_url(target)
 {
-	if (! $("input", $(target).parent()).attr('disabled'))
+	if( ! IN_WORK)
 		if( $("#urls > #url_row").length > 1)
-			$(target).parent().remove();
+			$(target).remove();
 }
 
 //подстановка примера
@@ -306,15 +322,11 @@ function onAjaxError(event, request, settings)
 
 //когда DOM загрузился, можно продолжить
 $(document).ready(function(){
+
 	
 	preload_images();
 	
 	viz_start();
-	
-	add_author('', '', '');
-	
-	//после заполнения авторов - надо их задисайблить
-	autodetect_change();
 
 	//открыть, закрыть форму с дескрипшеном
 	$("#descr_off").click(function(){
@@ -334,12 +346,23 @@ $(document).ready(function(){
 	
 	//добавить урл
 	$("#addurl").click(function(){
-		add_url(this);
+		add_url($(this).parent());
+		
 	});
 	
 	//убрать урл
 	$("#remurl").click(function(){
-		rem_url(this);
+		rem_url($(this).parent());
+	});
+	
+	//добавить автора
+	$("#addaut").click(function(){
+		add_aut( $(this).parent() );
+	});
+	
+	//добавить автора
+	$("#remaut").click(function(){
+		rem_aut( $(this).parent() );
 	});
 	
 	//чек-анчек контрола старого движка
@@ -376,6 +399,12 @@ $(document).ready(function(){
 			return false
 		}
 	)
+	
+	//добавляем первого автора
+	add_author('', '', '');
+	
+	//после заполнения авторов - надо их задисайблить
+	autodetect_change();
 });
 
 //если есть флаг, что надо сразу запускать процесс - то засабмиттить форму

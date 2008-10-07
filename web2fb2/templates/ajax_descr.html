@@ -5,7 +5,19 @@ $def with (title, author_first, author_middle, author_last, genres, cur_genre, l
 
 <div>Title: <input class='descr' type="text" name="title" id="title" size="74" maxlength="256" value = '$title' /></div>
 
-<table id = 'authors'></table>
+<span  id = 'authors_source' style = 'display:none'>
+	<div id = 'author'>
+		Author:
+		<input class = "author_first" id="author_first" type="text" maxlength="256" />
+		<input class = "author_middle" id="author_middle" type="text" maxlength="256" />
+		<input class = "author_last" id="author_last" type="text" maxlength="256" />
+		<span id='addaut'>[+]</span>
+		<span id='remaut'>[-]</span>
+	</div>
+</span>
+
+<div id = 'authors'>
+</div>
 
 <div>Genre: <select name="genre" id="genre" class='descr'>
 $for genre in genres:
