@@ -5,6 +5,7 @@ from lxml import etree
 import zipfile
 import os
 import time
+import base64
 
 XSL_DIR = 'schemas'
 XSL_MAIN = 'FB2_2_xhtml.xsl'
@@ -113,16 +114,19 @@ class epub(object):
 		#пишем metainfo
 		self.zip.addString('META-INF/container.xml', EPUB_METAINFO)
 		
+		#создаем opf
+		self.opf = epub_opf()
+		
 		#пишем css
 		if style:
 			self.zip.addFile('OEBPS/style.css', style)
+		self.opf.addMainfestItem('css', 'style.css', "text/css")
 		
 		#пишем шрифты
 		for font_file in font_files:
 			self.zip.addFile('OEBPS/fonts/'+ os.path.basename(font_file), font_file)
 		
-		#создаем opf
-		self.opf = epub_opf()
+		
 	
 	def close(self):
 		self.zip.addString('OEBPS/content.opf', self.opf.get())
@@ -138,16 +142,21 @@ class epub(object):
 		
 		self.opf.addSpineItem(id)
 	
+	def addImage(self, name, data, media_type):
+		
+		self.zip.addString('OEBPS/' + name, data)
+		
+		self.opf.addMainfestItem(name, name, media_type)
+	
 	def setDescr(self, meta):
 		self.opf.setMeta(meta)
 
 
 def do( file_in, file_out, with_fonts):
-	doc = etree.parse(file_in) #парсим fb2
+	fb2 = etree.parse(file_in) #парсим fb2
 	#преобразуем файл
 	transform = etree.XSLT( etree.parse( os.path.join(XSL_DIR, XSL_MAIN) ) ) #загружаем преобразователь
-	rez = str( transform(doc) )
-	file('out.xhtml', 'w').write(rez)
+	rez = str( transform(fb2) )
 	
 	fonts = [
 		#"epub_misc/fonts/LiberationMono-Bold.ttf",
@@ -164,10 +173,33 @@ def do( file_in, file_out, with_fonts):
 	descr = epub_descr()
 	e.setDescr(descr)
 	e.addContent(rez)
+	
+	#обрабатываем картинки
+	r = fb2.getroot()
+	for bin in r.iter():
+		if not bin.tag.endswith('binary'):
+			continue
+			
+		id = bin.get('id')
+		if not id:
+			continue
+			
+		content_type = bin.get('content-type')
+		if not content_type:
+			continue
+			
+		data = bin.text
+		if not data:
+			continue
+			
+		e.addImage(id, base64.decodestring(data), content_type)
+        
+    
+	
 	e.close()
 
 if __name__ == '__main__':
-	do('in.fb2', 'out.epub', True)
+	do('in.fb2', 'out.zip', True)
 	
 	
 
