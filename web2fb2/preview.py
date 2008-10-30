@@ -26,7 +26,7 @@ def proc( file_in, file_out):
 		r = doc.getroot()
 		img_dir = os.path.dirname(file_out)
 		for bin in r.iter():
-			if not bin.tag.endswith('binary'):
+			if not str(bin.tag).endswith('binary'):
 				continue
 			
 			id = bin.get('id')
