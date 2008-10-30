@@ -25,6 +25,7 @@ import progress
 import webprocess
 import htmlprocess
 import preview
+import fb2epub
 
 import sess_wrap
 
@@ -45,6 +46,7 @@ class web_params(object):
 		self.is_pre = False
 		self.descr = None
 		self.old_h2fb2 = False
+		self.epub_fonts = False
 		
 class ebook_stat_(object):
 	"""
@@ -62,6 +64,9 @@ class ebook_stat_(object):
 		self.old_h2fb2 = False
 		self.descr = None
 		self.valid = None
+		self.preview_file = None
+		self.epub_file = None
+		self.epub_size = 0
 		
 class SessRet(Exception):
 	'''
@@ -249,12 +254,19 @@ def do(params, sess, ajax = False):
 			log.debug('book_title %s' % descr.title.encode('UTF8')) 
 			ebook_name = gen_name('_'.join((auths_str, descr.title )))
 			if ebook_name:
-				ebook_path = os.path.join(ebook_folder, ebook_name + '.fb2')
+				 ebook_name_base = os.path.join(ebook_folder, ebook_name)
 			else:
-				ebook_path = os.path.join(ebook_folder, urlparse.urlparse(params.urls[0])[1][:64] + '.fb2')
+				ebook_name_base = os.path.join(ebook_folder, urlparse.urlparse(params.urls[0])[1][:64])
+			
+			ebook_path = ebook_name_base + '.fb2'
+			
 
 			#переименовываем книгу из временного имени в новое
 			os.rename(ebook_tmp_path, ebook_path)
+			
+			#создаем epub
+			epub_name = ebook_name_base + '.epub'
+			fb2epub.do(ebook_path, epub_name, params.epub_fonts)
 			
 			#генерим preview
 			preview_path = os.path.join(ebook_folder, 'preview.html')
@@ -280,6 +292,8 @@ def do(params, sess, ajax = False):
 			ebook_stat.old_h2fb2 = params.old_h2fb2
 			ebook_stat.valid = valid
 			ebook_stat.preview_file = preview_path
+			ebook_stat.epub_file = os.path.split(epub_name)[1]
+			ebook_stat.epub_size = os.path.getsize(epub_name)
 			
 			progres.done = ebook_stat # сохраняем в прогрессе
 		except Exception, er: # если в процессе всей этой деятельности произошла ошибка, возвращаем ошибку

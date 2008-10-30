@@ -1,4 +1,4 @@
-$def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg, preview_link)
+$def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg, preview_link, epub_url, epub_file, epub_size)
 <table>
   <tr>
     <td>&nbsp;</td>
@@ -22,11 +22,14 @@ $else:
 </table>
 <br />
 <b>Ready: </b><br />
-<a href = '$file_url'>$file_name</a>  - $file_size KB
+<b>FB2:</b> <a href = '$file_url'>$file_name</a>  - $file_size KB
 $if valid:
-	<span style="border: 2px solid #33CC00; background-color: #CCFF99;">&nbsp;valid FB2&nbsp; </span>
+	<span style="border: 2px solid #33CC00; background-color: #CCFF99;">&nbsp;valid&nbsp; </span>
 $else:
-	<span style="border: 2px solid #FF3333; background-color: #FF9999;" title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span> 
+	<span style="border: 2px solid #FF3333; background-color: #FF9999;" title = "$invalid_msg">&nbsp;invalid&nbsp; </span> 
+
+<br />
+<b>EPUB:</b> <a href = '$epub_url'>$epub_file</a>  - $epub_size KB
 <br />
 <a target="_blank" href = '$preview_link'>preview</a>
 

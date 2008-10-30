@@ -71,6 +71,9 @@ def main():
 		if form.getvalue('old_h2fb2', False):
 			params.old_h2fb2 = True
 		
+		if form.getvalue('font', ''):
+			params.epub_fonts = True
+		
 		log.info('Set descr for urls %s' % urls)
 		#заполняем описани
 		
@@ -164,7 +167,10 @@ def main():
 					stat.file_size//1024,
 					stat.valid['is_valid'],
 					stat.valid['msg'],
-					stat.preview_file
+					stat.preview_file,
+					stat.path + '/' + stat.epub_file,
+					stat.epub_file, 
+					stat.epub_size//1024
 				)
 				descr_html = render.simple_descr(
 					stat.descr.title,

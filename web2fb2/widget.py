@@ -95,14 +95,15 @@ def ajax():
 		if form.getvalue('img', ''):
 			params.is_img = True
 		
-		if form.getvalue('tab', ''):
-			params.is_tab = True
+		
+		params.is_tab = False
 			
-		if form.getvalue('pre', ''):
-			params.is_pre = True
+		
+		params.is_pre = False
+		
+		params.old_h2fb2 = False
 			
-		if form.getvalue('old_h2fb2', ''):
-			params.old_h2fb2 = True
+		params.epub_fonts = True
 			
 		
 		descr = fb_utils.description()
@@ -183,7 +184,10 @@ def ajax():
 								stat.file_size//1024,
 								stat.valid['is_valid'],
 								stat.valid['msg'],
-								stat.preview_file
+								stat.preview_file,
+								stat.path + '/' + stat.epub_file,
+								stat.epub_file, 
+								stat.epub_size//1024
 							),
 							'descr':{
 								'title':stat.descr.title.encode('UTF-8'),

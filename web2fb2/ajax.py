@@ -50,7 +50,7 @@ def base():
 	
 	webutils.print_page(
 		render.base(
-			render.form(url, img, False, doit, False),
+			render.form(url, img, False, doit, False, True),
 			render.descr(
 				'',
 				'',
@@ -105,6 +105,8 @@ def ajax():
 		if form.getvalue('old_h2fb2', ''):
 			params.old_h2fb2 = True
 			
+		if form.getvalue('font', ''):
+			params.epub_fonts = True
 		
 		descr = fb_utils.description()
 		descr.urls = params.urls
@@ -184,7 +186,10 @@ def ajax():
 								stat.file_size//1024,
 								stat.valid['is_valid'],
 								stat.valid['msg'],
-								stat.preview_file
+								stat.preview_file,
+								stat.path + '/' + stat.epub_file,
+								stat.epub_file, 
+								stat.epub_size//1024
 							),
 							'descr':{
 								'title':stat.descr.title.encode('UTF-8'),

@@ -246,6 +246,12 @@ def descr_trans(fb2_etree):
 	lang = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:lang/text()", namespaces = ns) )
 	if lang:
 		descr.lang = lang
+        
+    #id
+	id = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:document-info/m:id/text()", namespaces = ns) )
+	if lang:
+		descr.id = id
+    
 
 	#автор
 	creators = []

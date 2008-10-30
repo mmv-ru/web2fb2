@@ -1,13 +1,21 @@
-$def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg, preview_link)
-<div class='result_url'><b>Ready: <br/></b><a href = '$file_url'>$file_name</a> - $file_size KB<br /></div>
-$if valid:
-	<span class='valid_fb2'>&nbsp;valid FB2&nbsp;</span>
-$else:
-	<span class='invalid_fb2' title = "$invalid_msg">&nbsp;invalid FB2&nbsp; </span>
+$def with (urls, work_time, is_images, file_url, file_name, file_size, valid, invalid_msg, preview_link, epub_url, epub_file, epub_size)
+<div class='result_url'>
 
-<br />
+<b>Ready </b><br/>
 <span id = 'preview_on' class = 'preview_on'><u>preview</u></span>
+<br/>
+<b>FB2:</b>
+<a href = '$file_url'>$file_name</a> - $file_size KB
 
+$if valid:
+	<span class='valid_fb2'>&nbsp;valid&nbsp;</span>
+$else:
+	<span class='invalid_fb2' title = "$invalid_msg">&nbsp;invalid&nbsp; </span>
+
+<br/>
+<b>EPUB:</b>
+<a href = '$epub_url'>$epub_file</a> - $epub_size KB
+</div>
 <script src="misc/myajax_preveiw.js"></script>
 <iframe id ='preview_ifame' class ='preview_ifame' src='$preview_link'></iframe>
 
