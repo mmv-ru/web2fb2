@@ -41,6 +41,9 @@ class epub_descr(object):
 		self.title = ''
 		self.id = ''
 		self.lang = ''
+		self.type = None
+		self.creator = None
+		self.publisher = None
 
 class epub_opf(object):
 	def __init__(self):
@@ -60,18 +63,36 @@ class epub_opf(object):
 		
 	def setMeta(self, meta):
 		#tile
-		title = etree.SubElement(self.metadata, self.DC + "title")
-		title.text = meta.title
+		if meta.title:
+			title = etree.SubElement(self.metadata, self.DC + "title")
+			title.text = meta.title
 		
 		#задаем id книги
-		self.package.set("unique-identifier", "bookid")
-		identifier = etree.SubElement(self.metadata, self.DC + "identifier")
-		identifier.set('id','bookid')
-		identifier.text = meta.id
+		if meta.id:
+			self.package.set("unique-identifier", "bookid")
+			identifier = etree.SubElement(self.metadata, self.DC + "identifier")
+			identifier.set('id','bookid')
+			identifier.text = meta.id
 		
 		#язык
-		language = etree.SubElement(self.metadata, self.DC + "title")
-		language.text = meta.lang
+		if meta.lang:
+			language = etree.SubElement(self.metadata, self.DC + "language")
+			language.text = meta.lang
+		
+		#автор
+		if meta.creator:
+			creator = etree.SubElement(self.metadata, self.DC + "creator")
+			creator.text = meta.creator
+		
+		#издатель
+		if meta.publisher:
+			publisher = etree.SubElement(self.metadata, self.DC + "publisher")
+			publisher.text = meta.publisher
+		
+		#type
+		if meta.type:
+			typ = etree.SubElement(self.metadata, self.DC + "type")
+			typ.text = meta.type
 		
 	def addMainfestItem(self, id, href, media_type):
 		item = etree.SubElement(self.manifest, self.IDPF + "item")
@@ -152,11 +173,58 @@ class epub(object):
 		self.opf.setMeta(meta)
 
 
+def descr_trans(fb2_etree):
+	descr = epub_descr()
+	
+	ns = {'m':'http://www.gribuser.ru/xml/fictionbook/2.0'}
+	
+	#title
+	title = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:book-title/text()", namespaces = ns) )
+	if title:
+		descr.title =  title
+
+	#язык
+	lang = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:lang/text()", namespaces = ns) )
+	if lang:
+		descr.lang = lang
+
+	#автор
+	creators = []
+	for author in fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:author", namespaces = ns):
+		creator =  ' '.join( 
+			author.xpath('m:first-name/text()', namespaces = ns) + 
+			author.xpath('m:middle-name/text()', namespaces = ns) +
+			author.xpath('m:last-name/text()', namespaces = ns)
+		)
+	
+		if creator:
+			creators.append(creator)
+	creator = '; '.join(creators)
+	if creator:
+		descr.creator = creator
+
+	#жанр
+	type = '; '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:genre/text()", namespaces = ns) )
+	if type:
+		descr.type = type
+	
+	#издатель
+	publisher = '; '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:publish-info/m:publisher/text()", namespaces = ns) )
+	if publisher:
+		descr.publisher = publisher
+	
+	return descr
+    
+
 def do( file_in, file_out, with_fonts):
 	fb2 = etree.parse(file_in) #парсим fb2
 	#преобразуем файл
 	transform = etree.XSLT( etree.parse( os.path.join(XSL_DIR, XSL_MAIN) ) ) #загружаем преобразователь
 	rez = str( transform(fb2) )
+	
+	#разбираем дискрипшн
+	descr = descr_trans(fb2)
+
 	
 	fonts = [
 		#"epub_misc/fonts/LiberationMono-Bold.ttf",
@@ -170,14 +238,15 @@ def do( file_in, file_out, with_fonts):
 	]
 	
 	e = epub(file_out, 'epub_misc/style_font.css', fonts)
-	descr = epub_descr()
+
 	e.setDescr(descr)
 	e.addContent(rez)
 	
 	#обрабатываем картинки
 	r = fb2.getroot()
 	for bin in r.iter():
-		if not bin.tag.endswith('binary'):
+		
+		if not str(bin.tag).endswith('binary'):
 			continue
 			
 		id = bin.get('id')
@@ -193,9 +262,7 @@ def do( file_in, file_out, with_fonts):
 			continue
 			
 		e.addImage(id, base64.decodestring(data), content_type)
-        
-    
-	
+
 	e.close()
 
 if __name__ == '__main__':
