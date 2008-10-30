@@ -82,7 +82,7 @@ class binary(object):
 def get_image( src):
 	'''
 	src - путь к файлу с картинкой.
-	возвращает {'type':'png' или 'jpg', 'data':данные}, None - в случае неудачи.
+	возвращает {'type':'png' или 'jpeg', 'data':данные}, None - в случае неудачи.
 	понимает gif, jpeg, png. gif - перекодирует в png
 	'''
 	try:
@@ -109,7 +109,7 @@ def get_image( src):
 		except IOError:
 			return None
 		else:
-			return {'data':data, 'type':'jpg'}
+			return {'data':data, 'type':'jpeg'}
 
 	return None
 	

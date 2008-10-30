@@ -1349,7 +1349,7 @@ class MyHTMLParser(SGMLParser):
             except IOError:
                 return None
             else:
-                return {'data':data, 'type':'jpg'}
+                return {'data':data, 'type':'jpeg'}
             
         return None
         

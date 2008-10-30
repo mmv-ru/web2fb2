@@ -2,3 +2,8 @@ body {
 	margin-right: 8pt;
 	text-align: justify
 }
+
+div.img {
+	padding: 3px;
+	text-align: center;
+}

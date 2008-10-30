@@ -26,6 +26,34 @@ font-weight: bold;
 src:url(fonts/LiberationSans-BoldItalic.ttf);
 }
 
+@font-face {
+font-family: "Liberation Mono";
+font-style: normal;
+font-weight: normal;
+src:url(fonts/LiberationMono-Regular.ttf);
+}
+
+@font-face {
+font-family: "Liberation Mono";
+font-style: normal;
+font-weight: bold;
+src:url(fonts/LiberationMono-Bold.ttf);
+}
+
+@font-face {
+font-family: "Liberation Mono";
+font-style: italic;
+font-weight: normal;
+src:url(fonts/LiberationMono-Italic.ttf);
+}
+
+@font-face {
+font-family: "Liberation Mono";
+font-style: italic;
+font-weight: bold;
+src:url(fonts/LiberationMono-BoldItalic.ttf);
+}
+
 body {
 	margin-right: 8pt;
 	font-family: 'Liberation Sans';
@@ -35,6 +63,7 @@ body {
 pre {
 	font-family: 'Liberation Mono';
 }
+
 
 div.img {
 	padding: 3px;

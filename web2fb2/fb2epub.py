@@ -63,19 +63,19 @@ class epub_opf(object):
 		
 	def setMeta(self, meta):
 		#tile
-		if meta.title:
+		if meta.title != None:
 			title = etree.SubElement(self.metadata, self.DC + "title")
 			title.text = meta.title
 		
 		#задаем id книги
-		if meta.id:
+		if meta.id != None:
 			self.package.set("unique-identifier", "bookid")
 			identifier = etree.SubElement(self.metadata, self.DC + "identifier")
 			identifier.set('id','bookid')
 			identifier.text = meta.id
 		
 		#язык
-		if meta.lang:
+		if meta.lang != None:
 			language = etree.SubElement(self.metadata, self.DC + "language")
 			language.text = meta.lang
 		
@@ -85,12 +85,12 @@ class epub_opf(object):
 			creator.text = meta.creator
 		
 		#издатель
-		if meta.publisher:
+		if meta.publisher != None:
 			publisher = etree.SubElement(self.metadata, self.DC + "publisher")
 			publisher.text = meta.publisher
 		
 		#type
-		if meta.type:
+		if meta.type != None:
 			typ = etree.SubElement(self.metadata, self.DC + "type")
 			typ.text = meta.type
 		
@@ -146,7 +146,6 @@ class epub(object):
 		#пишем шрифты
 		for font_file in font_files:
 			self.zip.addFile('OEBPS/fonts/'+ os.path.basename(font_file), font_file)
-		
 		
 	
 	def close(self):
@@ -214,30 +213,47 @@ def descr_trans(fb2_etree):
 		descr.publisher = publisher
 	
 	return descr
-    
+
 
 def do( file_in, file_out, with_fonts):
 	fb2 = etree.parse(file_in) #парсим fb2
 	#преобразуем файл
 	transform = etree.XSLT( etree.parse( os.path.join(XSL_DIR, XSL_MAIN) ) ) #загружаем преобразователь
-	rez = str( transform(fb2) )
+	epub_etree = transform(fb2)
+	rez = str( etree.tostring(epub_etree, pretty_print=True, encoding='UTF-8', xml_declaration=True) )
+	file('out.xhtml', 'w').write(rez)
 	
 	#разбираем дискрипшн
 	descr = descr_trans(fb2)
-
 	
+	ns = {'xh':'http://www.w3.org/1999/xhtml'}
+	if epub_etree.xpath('//xh:pre', namespaces = ns):
+		mono_fonts_flag = True
+		
+	else:
+		mono_fonts_flag = False
+
 	fonts = [
-		#"epub_misc/fonts/LiberationMono-Bold.ttf",
-		#"epub_misc/fonts/LiberationMono-BoldItalic.ttf",
-		#"epub_misc/fonts/LiberationMono-Italic.ttf",
-		#"epub_misc/fonts/LiberationMono-Regular.ttf",
 		"epub_misc/fonts/LiberationSans-Bold.ttf",
 		"epub_misc/fonts/LiberationSans-BoldItalic.ttf",
 		"epub_misc/fonts/LiberationSans-Italic.ttf",
 		"epub_misc/fonts/LiberationSans-Regular.ttf",
 	]
 	
-	e = epub(file_out, 'epub_misc/style_font.css', fonts)
+	fonts_mono = [
+		"epub_misc/fonts/LiberationMono-Bold.ttf",
+		"epub_misc/fonts/LiberationMono-BoldItalic.ttf",
+		"epub_misc/fonts/LiberationMono-Italic.ttf",
+		"epub_misc/fonts/LiberationMono-Regular.ttf"
+	]
+	
+	if with_fonts:
+		if mono_fonts_flag:
+			e = epub(file_out, 'epub_misc/style_font_mono.css', fonts + fonts_mono)
+		else:
+			e = epub(file_out, 'epub_misc/style_font.css', fonts)
+	else:
+		e = epub(file_out, 'epub_misc/style.css')
 
 	e.setDescr(descr)
 	e.addContent(rez)
@@ -266,7 +282,8 @@ def do( file_in, file_out, with_fonts):
 	e.close()
 
 if __name__ == '__main__':
-	do('in.fb2', 'out.zip', True)
+	do('in2.fb2', 'out.zip', True)
+	do('in2.fb2', 'out.epub', True)
 	
 	
 
