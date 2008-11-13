@@ -46,6 +46,7 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
 	<!-- section/title -->
 	<xsl:template match="fb:body/fb:title">
 		<h1><xsl:apply-templates mode="title"/></h1>

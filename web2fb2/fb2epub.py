@@ -10,6 +10,23 @@ import base64
 XSL_DIR = 'schemas'
 XSL_MAIN = 'FB2_2_xhtml.xsl'
 
+#словарь шрфитов с по паттернам
+#паттерн  pat.
+#pat[0]  m  моношириный, r  обычный
+#pat[1]  b  жирный, - нежирный
+#pat[2]  i  наклонный, - ненаклонный
+
+FONTS = {
+	'r--':'epub_misc/fonts/LiberationSans-Regular.ttf', #обычный
+	'rb-':'epub_misc/fonts/LiberationSans-Bold.ttf', #жирный
+	'r-i':'epub_misc/fonts/LiberationSans-Italic.ttf', #наклонный
+	'rbi':'epub_misc/fonts/LiberationSans-BoldItalic.ttf', #жирный-наклонный
+	'm--':'epub_misc/fonts/LiberationMono-Regular.ttf', #обычный, моноширинный
+	'mb-':'epub_misc/fonts/LiberationMono-Bold.ttf', #жирный, моноширинный
+	'm-i':'epub_misc/fonts/LiberationMono-Italic.ttf', #наклонный, моноширинный
+	'mbi':'epub_misc/fonts/LiberationMono-BoldItalic.ttf' #жирный-наклонный, моноширинный
+}
+
 #то что содержится в epub в файле metainfo
 EPUB_METAINFO = '''<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -17,7 +34,6 @@ EPUB_METAINFO = '''<?xml version="1.0"?>
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>'''
-
 
 class zip(object):
 	'''
@@ -158,12 +174,74 @@ class epub_ncx(object):
 	def setTitle(self, title):
 		pass
 
+class epub_style(object):
+	"""
+	класс создания css
+	
+	"""
+	def __init__(self, style_file = None):
+		if style_file:
+			self.style_data = file(style_file).read()
+		else:
+			self.style_data = ''
+			
+		self.use_fonts = []
+	
+	def __plug_font(self, font):
+		
+		s = """
+@font-face {
+	font-family: "%s";
+	font-weight: %s;
+	font-style: %s;
+	src:url(%s);
+}
+""" % (
+		'mono' if font[0][0] == 'm' else 'regular', 
+		'bold' if font[0][1] == 'b' else 'normal', 
+		'italic' if font[0][2] == 'i' else 'normal',
+		font[1]
+		)
+		
+		self.style_data += s
+	
+	def addFont(self, font):
+		self.use_fonts.append(font)
+	
+	def get(self):
+		#добавляем шритфы
+		#создаем теги и описания к ним, отдельно для body, отдельно для pre
+		mono_flag = False
+		for font in self.use_fonts:
+			self.__plug_font(font)
+			if font[0][0] == 'm':
+				mono_flag = True
+
+		if self.use_fonts:
+			data = """
+body {
+	font-family: 'regular';
+}
+"""
+			self.style_data += data
+		
+		if mono_flag:
+			data = """
+pre {
+	font-family: 'mono';
+}
+"""
+			self.style_data += data
+		
+		
+		return self.style_data
+		
 
 class epub(object):
 	"""
 	класс для констурирования epub
 	"""
-	def __init__(self, name, style = None, font_files = []):
+	def __init__(self, name, style = None, fonts= []):
 		"""
 		name - имя выходного epub файла
 		style - файл стилей, который запишутся
@@ -182,14 +260,17 @@ class epub(object):
 		#создаем opf
 		self.opf = epub_opf()
 		
-		#пишем css
-		if style:
-			self.zip.addFile('OEBPS/style.css', style)
-		self.opf.addMainfestItem('css', 'style.css', "text/css")
+		css = epub_style(style)
 		
 		#пишем шрифты
-		for font_file in font_files:
+		for font in fonts:
+			prop, font_file = font
 			self.zip.addFile('OEBPS/fonts/'+ os.path.basename(font_file), font_file)
+			css.addFont((font[0], 'fonts/' + os.path.basename(font_file)))
+			
+		#пишем css
+		self.zip.addString('OEBPS/style.css', css.get())
+		self.opf.addMainfestItem('css', 'style.css', "text/css")
 		
 	
 	def close(self):
@@ -246,12 +327,12 @@ def descr_trans(fb2_etree):
 	lang = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:title-info/m:lang/text()", namespaces = ns) )
 	if lang:
 		descr.lang = lang
-        
-    #id
+	
+	#id
 	id = ' '.join( fb2_etree.xpath("/m:FictionBook/m:description/m:document-info/m:id/text()", namespaces = ns) )
 	if lang:
 		descr.id = id
-    
+	
 
 	#автор
 	creators = []
@@ -280,6 +361,60 @@ def descr_trans(fb2_etree):
 	
 	return descr
 
+def permutations(t):
+	"""
+	делает все возможные комбинации перестановок элементов в списке
+	например если на вход подать [1, 2] получится [[1, 2], [2, 1]]
+	"""
+	if len(t) == 1:
+		return [t]
+	else:
+		rezs = []
+		for i in xrange( len(t) ):
+			for ost in permutations( t[:i] + t[i+1:] ):
+				rezs.append( t[i:i+1] + ost )
+		return rezs
+
+def comb(lis):
+	'''
+	делает хитрый перебор
+	делает из [[1, 2], ['x', 'y']]
+	[[1, 'x'], [1, 'y'], [2, 'x'], [2, 'y']]
+	ограничено только списками длинны от 1 до 3
+	'''
+
+	rez = []
+	
+	if len(lis) == 3:
+		for x in lis[0]:
+			for y in lis[1]:
+				for z in lis[2]:
+					rez.append([x, y, z])
+	elif len(lis) == 2:
+		for x in lis[0]:
+			for y in lis[1]:
+				rez.append([x, y])
+	elif len(lis) == 1:
+		for x in lis[0]:
+			rez.append([x])
+	
+	else:
+		raise ValueError
+	
+	return rez
+		
+
+def xpath_comb(t):
+	'''
+	делает все нужные переборы, и склеивает их как пути в xpath 
+	'''
+	
+	lol = []
+	
+	for l in  comb(t):
+		lol +=  permutations( l )
+	
+	return ' | '.join(  [ '//' + '//'.join(x) for x in lol] )
 
 def do( file_in, file_out, with_fonts):
 	fb2 = etree.parse(file_in) #парсим fb2
@@ -291,38 +426,51 @@ def do( file_in, file_out, with_fonts):
 	#разбираем дискрипшн
 	descr = descr_trans(fb2)
 	
-	#проверям, есть ли в получившемся epub тег pre, чтобы знать - нужнен будет моноширинный шрифт или нет
-	ns = {'xh':'http://www.w3.org/1999/xhtml'}
-	if epub_etree.xpath('//xh:pre', namespaces = ns):
-		mono_fonts_flag = True
-		
-	else:
-		mono_fonts_flag = False
-
-	#комплект обычных шрифтов
-	fonts = [
-		"epub_misc/fonts/LiberationSans-Bold.ttf",
-		"epub_misc/fonts/LiberationSans-BoldItalic.ttf",
-		"epub_misc/fonts/LiberationSans-Italic.ttf",
-		"epub_misc/fonts/LiberationSans-Regular.ttf",
-	]
-	
-	#комплект моноширинных шрифтов
-	fonts_mono = [
-		"epub_misc/fonts/LiberationMono-Bold.ttf",
-		"epub_misc/fonts/LiberationMono-BoldItalic.ttf",
-		"epub_misc/fonts/LiberationMono-Italic.ttf",
-		"epub_misc/fonts/LiberationMono-Regular.ttf"
-	]
-	
-	#начинаем конструировать epub файл
+	#определяем, какие шрифты используюется в получившейся книге
+	#список шрифтов должен заполнится парами (паттерн, путь к шрифту)
+	#паттерны - см. в описании FONTS
+	fonts_include = []
 	if with_fonts:
-		if mono_fonts_flag:
-			e = epub(file_out, 'epub_misc/style_font_mono.css', fonts + fonts_mono)
-		else:
-			e = epub(file_out, 'epub_misc/style_font.css', fonts)
-	else:
-		e = epub(file_out, 'epub_misc/style.css')
+		pat = 'r--'
+		fonts_include.append( (pat, FONTS[pat]) )
+		
+		ns = {'xh':'http://www.w3.org/1999/xhtml'} #определяем нейм-спейс
+		
+		mono = ['xh:pre'] #теги, в которых моноширинный шрифт
+		ital = ['xh:i'] #теги, в которых наклонный
+		bold = ['xh:b', 'xh:th', 'xh:h1', 'xh:h3', 'xh:h5'] #теги в которых жирный
+		
+		if epub_etree.xpath( xpath_comb([bold]), namespaces = ns):
+			pat = 'rb-'
+			fonts_include.append( (pat, FONTS[pat]) )
+			
+
+		if epub_etree.xpath( xpath_comb([ital]), namespaces = ns):
+			pat = 'r-i'
+			fonts_include.append( (pat, FONTS[pat]) )
+
+		if epub_etree.xpath( xpath_comb([bold, ital]), namespaces = ns):
+			pat = 'rbi'
+			fonts_include.append( (pat, FONTS[pat]) )
+
+		if epub_etree.xpath( xpath_comb([mono]) , namespaces = ns):
+			pat = 'm--'
+			fonts_include.append( (pat, FONTS[pat]) )
+		
+		if epub_etree.xpath( xpath_comb([mono, bold]), namespaces = ns):
+			pat = 'mb-'
+			fonts_include.append( (pat, FONTS[pat]) )
+			
+		if epub_etree.xpath( xpath_comb([mono, ital]), namespaces = ns):
+			pat = 'm-i'
+			fonts_include.append( (pat, FONTS[pat]) )
+		
+		if epub_etree.xpath( xpath_comb([mono, bold, ital]), namespaces = ns):
+			pat = 'mbi'
+			fonts_include.append( (pat, FONTS[pat]) )
+	
+	
+	e = epub(file_out, 'epub_misc/style.css', fonts_include) #создаем epub
 
 	e.setDescr(descr) #заполняем описание
 	e.addContent(rez) #добавляем контент
@@ -351,8 +499,9 @@ def do( file_in, file_out, with_fonts):
 	e.close()
 
 if __name__ == '__main__':
-	do('in2.fb2', 'out.zip', True)
-	do('in2.fb2', 'out.epub', True)
+	
+	do('in.fb2', 'out.zip', True)
+	do('in.fb2', 'out.epub', True)
 	
 	
 
