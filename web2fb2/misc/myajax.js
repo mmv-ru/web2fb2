@@ -371,7 +371,7 @@ $(document).ready(function(){
 	});
 	
 	//сабмит формы
-	$("form").submit(function(){
+	$("#f").submit(function(){
 			
 			extend_urls(); //добавляем к урлам http
 			

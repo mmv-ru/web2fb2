@@ -262,9 +262,9 @@ class html2fb2(object):
 		
 		#если надо, оборачиваем полученый результат в тег p и присоединяем к секции, во время оборачивания, стрипаем теги br
 		#оборачиваем необренутые в p теги, стрипаем br
-		p_rez =  self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+		p_rez =  self.break_tags('p', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
 		#оборачиваем необренутые в section теги, стрипаем sect
-		sects = self.break_tags('section', p_rez, ('strong', 'emphasis', 'code', 'p', 'table', 'title'), image_outline = True, image_inline = True, string = True, bad_tags = ['sect'])
+		sects = self.break_tags('section', p_rez, ('strong', 'emphasis', 'code', 'sup', 'sub', 'p', 'table', 'title'), image_outline = True, image_inline = True, string = True, bad_tags = ['sect'])
 		
 		for sec in sects:
 			big_section.append(sec)
@@ -386,7 +386,7 @@ class html2fb2(object):
 			#обрабатываем внутренности таблицы
 			rez = self.proc_tag(tag, in_pre)
 			#проверям, что внутренние теги - те которые допустимы.
-			if not self.check_tags(rez, ('strong', 'emphasis', 'code', 'image'), string = True):
+			if not self.check_tags(rez, ('strong', 'emphasis', 'code', 'sup', 'sub', 'image'), string = True):
 				coll += rez #если внутри все слишком сложно - нафиг такую внутри.
 				
 			else:
@@ -449,11 +449,20 @@ class html2fb2(object):
 				
 				elif tag.name in ('b', 'strong'): #жирный
 					rez = self.proc_tag(tag, in_pre)
-					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
 				elif tag.name in ('i', 'cite', 'em', 'var'): #жирный
 					rez = self.proc_tag(tag, in_pre)
-					coll += self.break_tags('emphasis', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+					coll += self.break_tags('emphasis', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
+				
+				elif tag.name in ('sup'): #жирный
+					rez = self.proc_tag(tag, in_pre)
+					coll += self.break_tags('sup', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
+				
+				elif tag.name in ('sub'): #жирный
+					rez = self.proc_tag(tag, in_pre)
+					coll += self.break_tags('sub', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
+				
 
 				elif tag.name == 'pre': #преформатированный текст
 					if self.skip_pre: #если не обрабатываем pre, включаем спец-обработчик переносов строки для всех дочерних тегов
@@ -461,12 +470,12 @@ class html2fb2(object):
 						coll += rez
 					else:
 						rez = self.proc_tag(tag, in_pre)
-						coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True)
+						coll += self.break_tags('code', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
 				elif tag.name == 'p': #параграф
 					rez = self.proc_tag(tag, in_pre)
 					#оборачиваем те теги, который можно обернуть, при этом стрипаем теги br
-					coll += self.break_tags('p', rez, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+					coll += self.break_tags('p', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
 				
 				elif tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'): #если заголовки - оформляем их жирным выделяем в отдельный параграф
 					#ставим воспомагетальный тег - начало секции. Потом на обработке секции его надо обработать  и удалить
@@ -476,9 +485,9 @@ class html2fb2(object):
 					#обрабатываем то, что внутри title
 					rez_title = self.proc_tag(tag, in_pre)
 					#добавляем p
-					p_title = self.break_tags('p', rez_title, ('strong', 'emphasis', 'code'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
+					p_title = self.break_tags('p', rez_title, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True, bad_tags = ['br'])
 					#добавляем title
-					title_tags = self.break_tags('title', p_title, ('strong', 'emphasis', 'code', 'p'),image_outline = False, image_inline = True, string = True)
+					title_tags = self.break_tags('title', p_title, ('strong', 'emphasis', 'code', 'sup', 'sub', 'p'),image_outline = False, image_inline = True, string = True)
 					
 					#проверям, не была-ли title рассечена чем-нибудь (например таблица выдавилась или не inline картинка)
 					#в таком случае тоже надо добавить новую секцию
@@ -573,8 +582,8 @@ if __name__ == '__main__':
 	params.skip_tables = False
 	#params.source_files = ['html/test.html', 'html/mail.htm']
 	#params.source_files = [ 'html/html.html']
-	params.source_files = [ 'html/nosov.html']
-	#params.source_files = [ 'html/test.html']
+	#params.source_files = [ 'html/nosov.html']
+	params.source_files = [ 'html/test.html']
 	params.file_out = 'out.fb2'
 	params.descr = fb_utils.description()
 	#params.descr.authors = [{'first': u'петер', 'middle': u'Михайлович', 'last': u'Размазня'}, {'first': 'Галина', 'middle':'Николаевна', 'last':'Борщь'}]
