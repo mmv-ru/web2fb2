@@ -451,15 +451,15 @@ class html2fb2(object):
 					rez = self.proc_tag(tag, in_pre)
 					coll += self.break_tags('strong', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
-				elif tag.name in ('i', 'cite', 'em', 'var'): #жирный
+				elif tag.name in ('i', 'cite', 'em', 'var'): #наклонный
 					rez = self.proc_tag(tag, in_pre)
 					coll += self.break_tags('emphasis', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
-				elif tag.name in ('sup'): #жирный
+				elif tag.name == 'sup': #верхний индекс
 					rez = self.proc_tag(tag, in_pre)
 					coll += self.break_tags('sup', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
-				elif tag.name in ('sub'): #жирный
+				elif tag.name == 'sub': #нижний индекс
 					rez = self.proc_tag(tag, in_pre)
 					coll += self.break_tags('sub', rez, ('strong', 'emphasis', 'code', 'sup', 'sub'), image_outline = False, image_inline = True, string = True)
 				
