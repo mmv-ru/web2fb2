@@ -73,7 +73,7 @@ def ajax():
 	try:
 		process.clean_up() #уборка территорий
 	except:
-		log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+		log.error(('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n').decode('UTF-8'))
 
 	
 	params = process.web_params()
@@ -84,7 +84,7 @@ def ajax():
 	urls = []
 	for url in form.getlist('url'):
 		if urlparse.urlparse(url)[1]:
-			urls.append(url)
+			urls.append(url.decode('UTF-8'))
 	
 	if not urls:
 		webutils.print_page( json.write({'error': render.error('Bad url')}) )

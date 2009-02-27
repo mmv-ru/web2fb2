@@ -38,7 +38,7 @@ class progress(object):
 				'level': self.level,
 				'time': self.time
 			},
-			0)
+			2)
 			
 		file(self.file_name,'w').write(dump)
 		

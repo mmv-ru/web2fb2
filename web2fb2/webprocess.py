@@ -5,6 +5,7 @@
 #
 
 import urllib2
+import urllib
 import urlparse
 import socket
 import md5
@@ -41,6 +42,27 @@ class WebError(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+
+def url_fix(s, charset='utf-8'):
+	"""Sometimes you get an URL by a user that just isn't a real
+	URL because it contains unsafe characters like ' ' and so on.  This
+	function can fix some of the problems in a similar way browsers
+	handle data entered by the user:
+
+	>>> url_fix(u'http://de.wikipedia.org/wiki/Elf (Begriffsklärung)')
+	'http://de.wikipedia.org/wiki/Elf%20%28Begriffskl%C3%A4rung%29'
+
+	:param charset: The target charset for the URL if the url was
+					given as unicode string.
+	"""
+	if isinstance(s, unicode):
+		s = s.encode(charset, 'ignore')
+	scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+	path = urllib.quote(path, '/%')
+	qs = urllib.quote_plus(qs, ':&=')
+	return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+	
+	
 
 def do(url, is_img, rez_folder, progres):
 
@@ -158,7 +180,7 @@ def download_html(url):
 	socket.setdefaulttimeout(20)
 		
 	opener = urllib2.build_opener()
-	request = urllib2.Request(url, None, {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8"})
+	request = urllib2.Request( url_fix(url), None, {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8"})
 	handle = opener.open(request)
 	text = handle.read()
 	realurl = handle.geturl()
@@ -185,7 +207,7 @@ def img_download(files_list, folder):
 	for url, file_name in files_list.items():
 		log.debug('Download image: %s into: %s' % (url, file_name))
 		try:
-			request = urllib2.Request(url, None, {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8"})
+			request = urllib2.Request( url_fix(url), None, {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.8.1.8) Gecko/20071008 Firefox/2.0.0.8"})
 			handle = opener.open(request)
 			data = handle.read()
 			handle.close()

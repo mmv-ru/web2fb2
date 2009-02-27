@@ -65,12 +65,14 @@ def critical(msg):
 		write(msg, 'critical')
 
 def log2file(msg, l):
-	file('log.log', 'a').write(msg + '\n')
+	#не забывать про кодировку!
+	file('log.log', 'a').write(msg.encode('UTF-8') + '\n')
 
 def log2console(msg, l):
 	'''
 	функция вывода по умолчанию
 	'''
+	#не забывать про кодировку!
 	print msg
 		
 #log_function = log2console

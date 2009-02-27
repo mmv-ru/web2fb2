@@ -250,8 +250,8 @@ def do(params, sess, ajax = False):
 			#создаем имя
 			auths_str = '_'.join([ auth['last'] + '_' + auth['first'] for auth in descr.authors])
 			
-			log.debug('book_auth_str %s' % auths_str.encode('UTF8'))
-			log.debug('book_title %s' % descr.title.encode('UTF8')) 
+			log.debug('book_auth_str %s' % auths_str)
+			log.debug('book_title %s' % descr.title) 
 			ebook_name = gen_name('_'.join((auths_str, descr.title )))
 			if ebook_name:
 				 ebook_name_base = os.path.join(ebook_folder, ebook_name)
@@ -298,7 +298,8 @@ def do(params, sess, ajax = False):
 			progres.done = ebook_stat # сохраняем в прогрессе
 		except Exception, er: # если в процессе всей этой деятельности произошла ошибка, возвращаем ошибку
 			progres.error = er
-			log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+			
+			log.error(('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n').decode('UTF-8'))
 		
 		#завершаем сессию
 		log.debug('end session')

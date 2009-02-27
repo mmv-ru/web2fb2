@@ -32,7 +32,7 @@ def main():
 	try:
 		process.clean_up() #уборка территорий
 	except:
-		log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+		log.error(('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n').decode('UTF-8'))
 
 
 	
@@ -147,7 +147,7 @@ def main():
 			
 			log.debug('Try later')
 		except Exception, er:
-				log.error('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n')
+				log.error(('\n------------------------------------------------\n' + traceback.format_exc() + '------------------------------------------------\n').decode('UTF-8'))
 				webutils.print_page( render.simple_base( render.simple_error(str(er)) ) )
 	
 		else:

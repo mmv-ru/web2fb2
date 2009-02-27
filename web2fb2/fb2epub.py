@@ -42,18 +42,28 @@ class zip(object):
 	def __init__(self, name):
 		self.zip_file = zipfile.ZipFile(name, 'w')
 		
-	def addFile(self, name, path):
+	def addFile(self, name, path, compression = 1):
 		'''
 		добавить файл из файловой системы
 		'''
-		self.zip_file.write(path, name)
+		if not compression:
+			cz = zipfile.ZIP_STORED
+		else:
+			cz = zipfile.ZIP_DEFLATED
+		self.zip_file.write(path, name, cz)
 	
-	def addString(self, name, string):
+	def addString(self, name, string, compression = 1):
 		'''
 		добавить файл из строки
 		'''
+		if not compression:
+			cz = zipfile.ZIP_STORED
+		else:
+			cz = zipfile.ZIP_DEFLATED
+		
 		zip_info = zipfile.ZipInfo(name)
 		zip_info.date_time = time.localtime(time.time())[:6]
+		zip_info.compress_type = cz
 		self.zip_file.writestr(zip_info, string)
 		
 	def close(self):
@@ -252,7 +262,7 @@ class epub(object):
 		self.zip = zip(name)
 		
 		#пишем mime
-		self.zip.addString('mimetype', 'application/epub+zip')
+		self.zip.addString('mimetype', 'application/epub+zip', compression = 0)
 		
 		#пишем metainfo
 		self.zip.addString('META-INF/container.xml', EPUB_METAINFO)
@@ -500,8 +510,8 @@ def do( file_in, file_out, with_fonts):
 
 if __name__ == '__main__':
 	
-	do('in.fb2', 'out.zip', True)
-	do('in.fb2', 'out.epub', True)
+	do('snos.fb2', 'out.zip', True)
+	do('snos.fb2', 'out.epub', True)
 	
 	
 
