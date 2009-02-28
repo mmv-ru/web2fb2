@@ -378,11 +378,13 @@ def zip_file(source_path, rez_folder):
 	zip_path = os.path.join(rez_folder, file_name + ".zip")
 	
 	zp = zipfile.ZipFile(zip_path, 'w')
-	zip_info = zipfile.ZipInfo(file_name)
+	zip_info = zipfile.ZipInfo(file_name.encode('UTF-8'))
 	
 	zip_info.date_time = time.localtime(time.time())[:6]
 	zip_info.compress_type = zipfile.ZIP_DEFLATED
 	
+	log.info(file_name)
+	file(source_path, 'rb').read()
 	zp.writestr(zip_info, file(source_path, 'rb').read())
 	zp.close()
 	
